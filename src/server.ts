@@ -29,7 +29,7 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from a custom config file
 dotenv.config({
   // Resolve the absolute path to config.env
-  path: path.resolve(__dirname, "../config/config.env"),
+  path: path.resolve(__dirname, "./config/config.env"),
 });
 
 // Create an Express application instance
@@ -37,7 +37,7 @@ const app: Application = express();
 
 if (process.env.NODE_ENV === "development") {
   // development logging middleware
-  app.use(morgan('dev'));
+  app.use(morgan("dev"));
 }
 
 // app.use(logger);

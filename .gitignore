@@ -19,7 +19,7 @@ build/
 .env
 .env.local
 .env.*.local
-config/config.env
+src/config/config.env
 
 
 # =========================
