@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 // import morgan middleware logger
 import morgan from "morgan";
 
+import { connectToMongoDB } from "./config/db.js";
 // import custom middleware logger function
 // import { logger } from "./middleware/auxillary.middleware.js";
 
@@ -31,6 +32,9 @@ dotenv.config({
   // Resolve the absolute path to config.env
   path: path.resolve(__dirname, "./config/config.env"),
 });
+
+// connect to the MongoDB database
+connectToMongoDB();
 
 // Create an Express application instance
 const app: Application = express();
