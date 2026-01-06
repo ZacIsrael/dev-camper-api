@@ -46,6 +46,11 @@ app.post("/api/v1/bootcamps", (req: Request, res: Response) => {
   res.status(200).json({ success: true, msg: "Bootcamp successfully added." });
 });
 
+// Replace a bootcamp
+app.put("/api/v1/bootcamps", (req: Request, res: Response) => {
+  res.status(200).json({ success: true, msg: "Bootcamp successfully replaced." });
+});
+
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
