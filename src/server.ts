@@ -38,7 +38,12 @@ app.get("/", (req: Request, res: Response) => {
 
 // Get all bootcamps
 app.get("/api/v1/bootcamps", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: "Show all bootcamps" });
+  res.status(200).json({ success: true, msg: "Show all bootcamps." });
+});
+
+// Add a bootcamp
+app.post("/api/v1/bootcamps", (req: Request, res: Response) => {
+  res.status(200).json({ success: true, msg: "Bootcamp successfully added." });
 });
 
 // Enable JSON body parsing for incoming requests
