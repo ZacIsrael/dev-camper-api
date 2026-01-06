@@ -2,6 +2,9 @@
 import express from "express";
 import type { Application, Request, Response, NextFunction } from "express";
 
+// Used for styling messages that are logged to the console.
+import colors from "colors";
+
 // Import dotenv to load environment variables from a file
 import dotenv from "dotenv";
 
@@ -65,5 +68,5 @@ app.get("/", (req: Request, res: Response): void => {
 // Start the server and listen for incoming connections
 app.listen(PORT, () => {
   // Log confirmation that the server is running
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
 });
