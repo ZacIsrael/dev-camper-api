@@ -36,6 +36,11 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
+// Get all bootcamps
+app.get("/api/v1/bootcamps", (req: Request, res: Response) => {
+  res.status(200).json({ success: true, msg: "Show all bootcamps" });
+});
+
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
