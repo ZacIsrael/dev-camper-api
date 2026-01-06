@@ -14,7 +14,6 @@ import { fileURLToPath } from "node:url";
 // import routes
 import bootcampsRouter from "./routes/bootcamps.route.js";
 
-
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
 
@@ -36,8 +35,10 @@ app.use(express.json());
 // Read PORT from environment variables or fall back to 8000
 const PORT = Number(process.env.PORT) || 8000;
 
+const API_VERSION = 1;
+
 // mount the routes
-app.use("/api/v1/bootcamps", bootcampsRouter);
+app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
 
 // default GET route
 app.get("/", (req: Request, res: Response): void => {
