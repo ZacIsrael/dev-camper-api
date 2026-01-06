@@ -1,5 +1,6 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
+import type { Request, Response } from "express";
 
 // Import dotenv to load environment variables from a file
 import dotenv from "dotenv";
@@ -26,7 +27,7 @@ dotenv.config({
 const app = express();
 
 // Default GET route
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     data: {
