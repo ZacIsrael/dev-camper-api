@@ -76,6 +76,16 @@ app.patch("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
     });
 });
 
+// Delete a bootcamp
+app.delete("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
+  res
+    .status(200)
+    .json({
+      success: true,
+      msg: `Bootcamp with id = ${req.params.id} successfully deleted.`,
+    });
+});
+
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
