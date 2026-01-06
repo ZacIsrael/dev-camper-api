@@ -11,9 +11,14 @@ import path from "node:path";
 // Import helper to convert module URL to file path (ESM-compatible)
 import { fileURLToPath } from "node:url";
 
+// import morgan middleware logger
+import morgan from "morgan";
+
+// import custom middleware logger function
+// import { logger } from "./middleware/auxillary.middleware.js";
+
 // import routes
 import bootcampsRouter from "./routes/bootcamps.route.js";
-import { logger } from "./middleware/auxillary.middleware.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -30,7 +35,12 @@ dotenv.config({
 // Create an Express application instance
 const app: Application = express();
 
-app.use(logger);
+if (process.env.NODE_ENV === "development") {
+  // development logging middleware
+  app.use(morgan('dev'));
+}
+
+// app.use(logger);
 
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
