@@ -38,3 +38,8 @@ Thumbs.db
 # Coverage / misc
 # =========================
 coverage/
+
+# =========================
+# Example data structure
+# =========================
+_data
