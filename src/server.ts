@@ -51,6 +51,11 @@ app.put("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
   res.status(200).json({ success: true, msg: `Bootcamp with id = ${req.params.id} successfully replaced.` });
 });
 
+// Replace a bootcamp
+app.patch("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
+  res.status(200).json({ success: true, msg: `Bootcamp with id = ${req.params.id} successfully modified.` });
+});
+
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
