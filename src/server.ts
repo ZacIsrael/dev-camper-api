@@ -26,9 +26,14 @@ dotenv.config({
 const app = express();
 
 // Default GET route
-app.get('/', (req, res) => {
-  res.send('Hello from express!');
-})
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: {
+      id: 0,
+    },
+  });
+});
 
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
