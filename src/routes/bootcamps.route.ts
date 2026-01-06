@@ -1,57 +1,33 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
 import type { Request, Response } from "express";
+import {
+  addBootcamp,
+  deleteBootcamp,
+  getBootcampById,
+  getBootcamps,
+  replaceBootcamp,
+  updateBootcamp,
+} from "../controllers/bootcamps.controller.js";
 
 const router = express.Router();
 
 // Get all bootcamps
-router.get("/", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: "Show all bootcamps." });
-});
+router.get("/", getBootcamps);
 
 // Get a bootcamp with a specific id
-router.get("/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully retrieved.`,
-    });
-});
+router.get("/:id", getBootcampById);
 
 // Add a bootcamp
-router.post("/", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: "Bootcamp successfully added." });
-});
+router.post("/", addBootcamp);
 
 // Replace a bootcamp
-router.put("/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully replaced.`,
-    });
-});
+router.put("/:id", replaceBootcamp);
 
-// Replace a bootcamp
-router.patch("/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully modified.`,
-    });
-});
+// Update a bootcamp
+router.patch("/:id", updateBootcamp);
 
 // Delete a bootcamp
-router.delete("/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully deleted.`,
-    });
-});
+router.delete("/:id", deleteBootcamp);
 
 export default router;
