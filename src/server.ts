@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 
 // import routes
 import bootcampsRouter from "./routes/bootcamps.route.js";
+import { logger } from "./middleware/auxillary.middleware.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -28,13 +29,6 @@ dotenv.config({
 
 // Create an Express application instance
 const app: Application = express();
-
-const logger = (req: Request, res: Response, next: NextFunction) => {
-  console.log(
-    `${req.method} ${req.protocol}://${req.get("host")}${req.originalUrl}`
-  );
-  next();
-};
 
 app.use(logger);
 
