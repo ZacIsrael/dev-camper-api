@@ -1,6 +1,6 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
-import type { Application, Request, Response } from "express";
+import type { Application, Request, Response, NextFunction } from "express";
 
 // Import dotenv to load environment variables from a file
 import dotenv from "dotenv";
@@ -28,6 +28,15 @@ dotenv.config({
 
 // Create an Express application instance
 const app: Application = express();
+
+const logger = (req: Request, res: Response, next: NextFunction) => {
+  console.log(
+    `${req.method} ${req.protocol}://${req.get("host")}${req.originalUrl}`
+  );
+  next();
+};
+
+app.use(logger);
 
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
