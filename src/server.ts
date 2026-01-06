@@ -25,6 +25,11 @@ dotenv.config({
 // Create an Express application instance
 const app = express();
 
+// Default GET route
+app.get('/', (req, res) => {
+  res.send('Hello from express!');
+})
+
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
