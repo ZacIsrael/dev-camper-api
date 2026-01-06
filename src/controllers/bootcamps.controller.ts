@@ -20,12 +20,15 @@ export const getBootcampById = async (
   res: Response,
   next: NextFunction
 ) => {
+  // obtain the bootcamp's id from the route parameter
+  const { id } = req.params;
+
   // use service retrieve specific
 
   // send response to route
   res.status(200).json({
     success: true,
-    msg: `Bootcamp with id = ${req.params.id} successfully retrieved.`,
+    msg: `Bootcamp with id = ${id} successfully retrieved.`,
   });
 };
 
@@ -45,12 +48,15 @@ export const replaceBootcamp = async (
   res: Response,
   next: NextFunction
 ) => {
+  // obtain the bootcamp's id from the route parameter
+  const { id } = req.params;
+
   // use service to replace a bootcamp
 
   // send response to route
   res.status(200).json({
     success: true,
-    msg: `Bootcamp with id = ${req.params.id} successfully replaced.`,
+    msg: `Bootcamp with id = ${id} successfully replaced.`,
   });
 };
 
@@ -59,12 +65,15 @@ export const updateBootcamp = async (
   res: Response,
   next: NextFunction
 ) => {
+  // obtain the bootcamp's id from the route parameter
+  const { id } = req.params;
+
   // use service to update a bootcamp
 
   // send response to route
   res.status(200).json({
     success: true,
-    msg: `Bootcamp with id = ${req.params.id} successfully modified.`,
+    msg: `Bootcamp with id = ${id} successfully modified.`,
   });
 };
 
@@ -73,11 +82,14 @@ export const deleteBootcamp = async (
   res: Response,
   next: NextFunction
 ) => {
+  // obtain the bootcamp's id from the route parameter
+  const { id } = req.params;
+
   // use service to delete a bootcamp
 
   // send repsonse to route
   res.status(200).json({
     success: true,
-    msg: `Bootcamp with id = ${req.params.id} successfully deleted.`,
+    msg: `Bootcamp with id = ${id} successfully deleted.`,
   });
 };
