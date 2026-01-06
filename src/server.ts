@@ -41,6 +41,16 @@ app.get("/api/v1/bootcamps", (req: Request, res: Response) => {
   res.status(200).json({ success: true, msg: "Show all bootcamps." });
 });
 
+// Get a bootcamp with a specific id
+app.get("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
+  res
+    .status(200)
+    .json({
+      success: true,
+      msg: `Bootcamp with id = ${req.params.id} successfully retrieved.`,
+    });
+});
+
 // Add a bootcamp
 app.post("/api/v1/bootcamps", (req: Request, res: Response) => {
   res.status(200).json({ success: true, msg: "Bootcamp successfully added." });
@@ -48,12 +58,22 @@ app.post("/api/v1/bootcamps", (req: Request, res: Response) => {
 
 // Replace a bootcamp
 app.put("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: `Bootcamp with id = ${req.params.id} successfully replaced.` });
+  res
+    .status(200)
+    .json({
+      success: true,
+      msg: `Bootcamp with id = ${req.params.id} successfully replaced.`,
+    });
 });
 
 // Replace a bootcamp
 app.patch("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: `Bootcamp with id = ${req.params.id} successfully modified.` });
+  res
+    .status(200)
+    .json({
+      success: true,
+      msg: `Bootcamp with id = ${req.params.id} successfully modified.`,
+    });
 });
 
 // Enable JSON body parsing for incoming requests
