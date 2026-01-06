@@ -1,6 +1,6 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
-import type { Request, Response } from "express";
+import type { Application, Request, Response } from "express";
 
 // Import dotenv to load environment variables from a file
 import dotenv from "dotenv";
@@ -10,6 +10,10 @@ import path from "node:path";
 
 // Import helper to convert module URL to file path (ESM-compatible)
 import { fileURLToPath } from "node:url";
+
+// import routes
+import bootcampsRouter from "./routes/bootcamps.route.js";
+
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -24,73 +28,21 @@ dotenv.config({
 });
 
 // Create an Express application instance
-const app = express();
-
-// Default GET route
-app.get("/", (req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      id: 0,
-    },
-  });
-});
-
-// Get all bootcamps
-app.get("/api/v1/bootcamps", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: "Show all bootcamps." });
-});
-
-// Get a bootcamp with a specific id
-app.get("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully retrieved.`,
-    });
-});
-
-// Add a bootcamp
-app.post("/api/v1/bootcamps", (req: Request, res: Response) => {
-  res.status(200).json({ success: true, msg: "Bootcamp successfully added." });
-});
-
-// Replace a bootcamp
-app.put("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully replaced.`,
-    });
-});
-
-// Replace a bootcamp
-app.patch("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully modified.`,
-    });
-});
-
-// Delete a bootcamp
-app.delete("/api/v1/bootcamps/:id", (req: Request, res: Response) => {
-  res
-    .status(200)
-    .json({
-      success: true,
-      msg: `Bootcamp with id = ${req.params.id} successfully deleted.`,
-    });
-});
+const app: Application = express();
 
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
 // Read PORT from environment variables or fall back to 8000
 const PORT = Number(process.env.PORT) || 8000;
+
+// mount the routes
+app.use("/api/v1/bootcamps", bootcampsRouter);
+
+// default GET route
+app.get("/", (req: Request, res: Response): void => {
+  res.send("Welcome to the Dev Camper API!");
+});
 
 // Start the server and listen for incoming connections
 app.listen(PORT, () => {
