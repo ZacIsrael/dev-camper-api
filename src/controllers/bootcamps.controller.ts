@@ -3,6 +3,7 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
 import type { Application, Request, Response, NextFunction } from "express";
+import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
 
 export const getBootcamps = async (
   req: Request,
@@ -37,10 +38,43 @@ export const addBootcamp = async (
   res: Response,
   next: NextFunction
 ) => {
-  // use service to add bootcamp
+  // see what's in the body of the request
+  console.log("addBootcamp: req.body = ", req.body);
 
-  // send response to route
-  res.status(200).json({ success: true, msg: "Bootcamp successfully added." });
+  // data transfer object (object that will contained the processed request)
+  let dto: CreateBootcampDTO;
+
+  // process the body of the request (see bootcampo.dto.js)
+  try {
+    dto = new CreateBootcampDTO(req.body);
+    console.log("addBootcamp: dto = ", dto);
+  } catch (err: any) {
+    // Error stems from client-side/body of the request
+    // see (bootcamp.dto.js) to see all possible error messages
+    res.status(400).json({
+      error: `Bad Request (POST /api/v1/bootcamps): ${err.message}`,
+      stack: err.stack,
+    });
+    return;
+  }
+
+  try {
+    // use service to add bootcamp
+    let bootcamp;
+    // this will be called once the bootcamp service has been implemented
+    // bootcamp = await bootcampService.createBootcamp(dto);
+    bootcamp = null;
+    // send response to route
+    res
+      .status(201)
+      .json({ success: true, msg: "Bootcamp successfully added.", bootcamp });
+  } catch (err: any) {
+    // Error inserting the bootcamp into the mongoDB collection
+    res.status(500).json({
+      error: `Server Error (POST /api/v1/bootcamps): ${err.message}`,
+      stack: err.stack,
+    });
+  }
 };
 
 export const replaceBootcamp = async (
