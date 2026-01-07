@@ -26,6 +26,7 @@ Example Bootcamp structure:
 
 // MongoDB module
 import mongoose, { Document, Schema } from "mongoose";
+import type { Career } from "./career.type.js";
 
 interface BootcampLocation {
   type: "Point";
@@ -51,7 +52,7 @@ export interface BootcampType extends Document {
   email: string;
   address: string;
   location: BootcampLocation;
-  careers: string[];
+  careers: Career[];
   averageRating: number;
   averageCost: number;
   // file name of photo
