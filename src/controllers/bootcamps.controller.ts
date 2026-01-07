@@ -4,6 +4,7 @@
 import express from "express";
 import type { Application, Request, Response, NextFunction } from "express";
 import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
+import { bootcampService } from "../services/bootcamp.service.js";
 
 export const getBootcamps = async (
   req: Request,
@@ -60,10 +61,7 @@ export const addBootcamp = async (
 
   try {
     // use service to add bootcamp
-    let bootcamp;
-    // this will be called once the bootcamp service has been implemented
-    // bootcamp = await bootcampService.createBootcamp(dto);
-    bootcamp = null;
+    const bootcamp = await bootcampService.createBootcamp(dto);
     // send response to route
     res
       .status(201)
