@@ -30,10 +30,12 @@ export const getBootcamps = async (
     });
   } catch (err: any) {
     // error occured when retrieving all bootcamp documents from the bootcamp MongoDB collection
-    res.status(500).json({
-      error: `Server Error (GET /api/v1/bootcamps): ${err.message}`,
-      stack: err.stack,
-    });
+    // res.status(500).json({
+    //   error: `Server Error (GET /api/v1/bootcamps): ${err.message}`,
+    //   stack: err.stack,
+    // });
+
+    next(new ErrorResponse(`Server Error (GET /api/v1/bootcamps`, 500));
   }
 };
 
@@ -87,10 +89,13 @@ export const addBootcamp = async (
   } catch (err: any) {
     // Error stems from client-side/body of the request
     // see (bootcamp.dto.js) to see all possible error messages
-    res.status(400).json({
-      error: `Bad Request (POST /api/v1/bootcamps): ${err.message}`,
-      stack: err.stack,
-    });
+    // res.status(400).json({
+    //   error: `Bad Request (POST /api/v1/bootcamps): ${err.message}`,
+    //   stack: err.stack,
+    // });
+    // return;
+
+    next(new ErrorResponse(`Bad Request (POST /api/v1/bootcamps)`, 400));
     return;
   }
 
@@ -103,10 +108,12 @@ export const addBootcamp = async (
       .json({ success: true, msg: "Bootcamp successfully added.", bootcamp });
   } catch (err: any) {
     // Error inserting the bootcamp into the mongoDB collection
-    res.status(500).json({
-      error: `Server Error (POST /api/v1/bootcamps): ${err.message}`,
-      stack: err.stack,
-    });
+    // res.status(500).json({
+    //   error: `Server Error (POST /api/v1/bootcamps): ${err.message}`,
+    //   stack: err.stack,
+    // });
+
+    next(new ErrorResponse(`Server Error (POST /api/v1/bootcamps))`, 500));
   }
 };
 
@@ -121,10 +128,12 @@ export const updateBootcamp = async (
 
   // 400: invalid ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      error: `Invalid bootcamp id: ${id}`,
-    });
+    // return res.status(400).json({
+    //   success: false,
+    //   error: `Invalid bootcamp id: ${id}`,
+    // });
+
+    next(new ErrorResponse(`Invalid bootcamp id: ${id}`, 400));
   }
 
   try {
@@ -134,10 +143,12 @@ export const updateBootcamp = async (
     // 404: not found
     if (!bootcamp) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      //   return res.status(404).json({
+      //     success: false,
+      //     error: `Bootcamp with id ${id} not found`,
+      //   });
+
+      next(new ErrorResponse(`Bootcamp with id ${id} not found`, 404));
     }
 
     // send response to route
@@ -147,11 +158,15 @@ export const updateBootcamp = async (
       bootcamp,
     });
   } catch (err: any) {
-    return res.status(500).json({
-      success: false,
-      error: `Server Error (PATCH /api/v1/bootcamps/${id}): ${err.message}`,
-      stack: err.stack,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   error: `Server Error (PATCH /api/v1/bootcamps/${id}): ${err.message}`,
+    //   stack: err.stack,
+    // });
+
+    next(
+      new ErrorResponse(`Server Error (PATCH /api/v1/bootcamps/${id})`, 500)
+    );
   }
 };
 
@@ -182,10 +197,12 @@ export const deleteBootcamp = async (
 
   // 400: invalid ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      error: `Invalid bootcamp id: ${id}`,
-    });
+    // return res.status(400).json({
+    //   success: false,
+    //   error: `Invalid bootcamp id: ${id}`,
+    // });
+
+    next(new ErrorResponse(`Invalid bootcamp id: ${id}`, 400));
   }
   try {
     // use service to delete a bootcamp
@@ -194,10 +211,12 @@ export const deleteBootcamp = async (
     // 404: not found
     if (!deleted) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      //   return res.status(404).json({
+      //     success: false,
+      //     error: `Bootcamp with id ${id} not found`,
+      //   });
+
+      next(new ErrorResponse(`Bootcamp with id ${id} not found`, 404));
     }
 
     // send repsonse to route
@@ -207,10 +226,14 @@ export const deleteBootcamp = async (
       deleted,
     });
   } catch (err: any) {
-    return res.status(500).json({
-      success: false,
-      error: `Server Error (DELETE /api/v1/bootcamps/${id}): ${err.message}`,
-      stack: err.stack,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   error: `Server Error (DELETE /api/v1/bootcamps/${id}): ${err.message}`,
+    //   stack: err.stack,
+    // });
+
+    next(
+      new ErrorResponse(`Server Error (DELETE /api/v1/bootcamps/${id})`, 500)
+    );
   }
 };

@@ -9,8 +9,10 @@ export const errorHandler = (
   // log error stack to the console
   console.log("err.stack = ", err.stack.red);
 
+  console.log("err = ", err);
+
   res.status(err.statusCode || 500).json({
     success: false,
-    error: err.message || 'Server Error',
+    error: err.message || "Server Error",
   });
 };
