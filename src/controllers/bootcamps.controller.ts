@@ -152,7 +152,7 @@ export const updateBootcamp = async (
     // send response to route
     res.status(200).json({
       success: true,
-      msg:  `Bootcamp with id = ${id} successfully modified.`,
+      msg: `Bootcamp with id = ${id} successfully modified.`,
       bootcamp,
     });
   } catch (err: any) {
@@ -189,11 +189,37 @@ export const deleteBootcamp = async (
   // obtain the bootcamp's id from the route parameter
   const { id } = req.params;
 
-  // use service to delete a bootcamp
+  // 400: invalid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid bootcamp id: ${id}`,
+    });
+  }
+  try {
+    // use service to delete a bootcamp
+    const deleted = bootcampService.deleteBootcampById(id);
 
-  // send repsonse to route
-  res.status(200).json({
-    success: true,
-    msg: `Bootcamp with id = ${id} successfully deleted.`,
-  });
+    // 404: not found
+    if (!deleted) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+
+    // send repsonse to route
+    res.status(204).json({
+      success: true,
+      msg: `Bootcamp with id = ${id} successfully deleted.`,
+      deleted,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: `Server Error (DELETE /api/v1/bootcamps/${id}): ${err.message}`,
+      stack: err.stack,
+    });
+  }
 };
