@@ -67,6 +67,7 @@ export const getBootcampById = async (
       bootcamp,
     });
   } catch (err: any) {
+    console.log('controller: err = ', err);
     next(new ErrorResponse(`Server Error (GET /api/v1/bootcamps/${id})`, 500));
   }
 };
@@ -113,7 +114,10 @@ export const addBootcamp = async (
     //   stack: err.stack,
     // });
 
-    next(new ErrorResponse(`Server Error (POST /api/v1/bootcamps))`, 500));
+    console.log('controller: err = ', err);
+    // if err.code = duplicate key, then set the status code to 400
+    next(new ErrorResponse(err.message, 500));
+    // next(new ErrorResponse(`Server Error (POST /api/v1/bootcamps))`, 500));
   }
 };
 
