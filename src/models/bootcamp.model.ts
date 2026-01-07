@@ -42,7 +42,7 @@ const bootcampSchema = new Schema<BootcampType>({
     type: String,
     required: [true, "Please add a description"],
 
-    maxLength: [100, "Description can't be longer than 100 characters"],
+    maxLength: [165, "Description can't be longer than 165 characters"],
   },
   website: {
     type: String,
@@ -107,29 +107,29 @@ const bootcampSchema = new Schema<BootcampType>({
   photo: {
     type: String,
     // points to an image titled no-photo.jpg (will be on the frontend)
-    default: 'no-photo.jpg'
+    default: "no-photo.jpg",
   },
 
   housing: {
     type: Boolean,
-    default: false
+    default: false,
   },
   jobAssistance: {
     type: Boolean,
-    default: false
+    default: false,
   },
   jobGuarantee: {
     type: Boolean,
-    default: false
+    default: false,
   },
   acceptGi: {
     type: Boolean,
-    default: false
+    default: false,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 // create and export this Bootcamp model
