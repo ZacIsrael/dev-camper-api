@@ -44,4 +44,21 @@ export const bootcampService = {
     // if it's null, that means it does not exist; gets handled in the controller
     return bootcamp;
   },
+
+  // Updates a bootcamp with a given id
+  async updateBootcampById(
+    id: string,
+    body: Object
+  ): Promise<BootcampType | null> {
+    // Finds a bootcamp by ID and applies partial updates from the request body
+    // Returns the updated document instead of the original
+    const bootcamp = await Bootcamp.findByIdAndUpdate(id, body, {
+      new: true,
+      // Ensures mongoose schema validators run on the update
+      runValidators: true,
+    });
+    // Returns the updated bootcamp document
+    // Null indicates the bootcamp was not found (handled in controller)
+    return bootcamp;
+  },
 };
