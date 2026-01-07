@@ -119,6 +119,51 @@ export const addBootcamp = async (
   }
 };
 
+export const updateBootcamp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // obtain the bootcamp's id from the route parameter
+  const { id } = req.params;
+  const { body } = req;
+
+  // 400: invalid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid bootcamp id: ${id}`,
+    });
+  }
+
+  try {
+    // use service to update a bootcamp
+    const bootcamp = await bootcampService.updateBootcampById(id, body);
+
+    // 404: not found
+    if (!bootcamp) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+
+    // send response to route
+    res.status(200).json({
+      success: true,
+      msg:  `Bootcamp with id = ${id} successfully modified.`,
+      bootcamp,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: `Server Error (PATCH /api/v1/bootcamps/${id}): ${err.message}`,
+      stack: err.stack,
+    });
+  }
+};
+
 export const replaceBootcamp = async (
   req: Request,
   res: Response,
@@ -133,23 +178,6 @@ export const replaceBootcamp = async (
   res.status(200).json({
     success: true,
     msg: `Bootcamp with id = ${id} successfully replaced.`,
-  });
-};
-
-export const updateBootcamp = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  // obtain the bootcamp's id from the route parameter
-  const { id } = req.params;
-
-  // use service to update a bootcamp
-
-  // send response to route
-  res.status(200).json({
-    success: true,
-    msg: `Bootcamp with id = ${id} successfully modified.`,
   });
 };
 
