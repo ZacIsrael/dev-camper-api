@@ -44,12 +44,12 @@ export const getBootcampById = async (
   const { id } = req.params;
 
   // 400: invalid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({
-      success: false,
-      error: `Invalid bootcamp id: ${id}`,
-    });
-  }
+//   if (!mongoose.Types.ObjectId.isValid(id)) {
+//     return res.status(400).json({
+//       success: false,
+//       error: `Invalid bootcamp id: ${id}`,
+//     });
+//   }
 
   try {
     // retrieve bootcamp with given id using bootcamp service
@@ -70,11 +70,13 @@ export const getBootcampById = async (
       bootcamp,
     });
   } catch (err: any) {
-    return res.status(500).json({
-      success: false,
-      error: `Server Error (GET /api/v1/bootcamps/${id}): ${err.message}`,
-      stack: err.stack,
-    });
+    next(err);
+
+    // return res.status(500).json({
+    //   success: false,
+    //   error: `Server Error (GET /api/v1/bootcamps/${id}): ${err.message}`,
+    //   stack: err.stack,
+    // });
   }
 };
 

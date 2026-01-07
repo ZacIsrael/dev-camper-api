@@ -17,6 +17,9 @@ import { fileURLToPath } from "node:url";
 // import morgan middleware logger
 import morgan from "morgan";
 
+// custom error handler middleware
+import { errorHandler } from "./middleware/error.middleware.js";
+
 import { connectToMongoDB } from "./config/db.js";
 // import custom middleware logger function
 // import { logger } from "./middleware/auxillary.middleware.js";
@@ -59,6 +62,9 @@ const API_VERSION = 1;
 
 // mount the routes
 app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
+
+// use custom error handler middleware
+app.use(errorHandler);
 
 // default GET route
 app.get("/", (req: Request, res: Response): void => {
