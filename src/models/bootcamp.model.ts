@@ -68,11 +68,15 @@ const bootcampSchema = new Schema<BootcampType>({
     type: {
       type: String,
       enum: ["Point"],
-      required: true,
+      // required: true,
+      // just for now until I learn how to add a location
+      required: false,
     },
     coordinates: {
       type: [Number],
-      required: true,
+      // required: true,
+      // just for now until I learn how to add a location
+      required: false,
       index: "2dsphere",
     },
     formattedAddress: String,
