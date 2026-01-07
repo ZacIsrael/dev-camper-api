@@ -61,4 +61,10 @@ export const bootcampService = {
     // Null indicates the bootcamp was not found (handled in controller)
     return bootcamp;
   },
+
+  // Deletes a bootcamp with a given id
+  async deleteBootcampById(id: string) {
+    // returns the deleted bootcamp or null if it never existed
+    return await Bootcamp.findByIdAndDelete(id);
+  }
 };
