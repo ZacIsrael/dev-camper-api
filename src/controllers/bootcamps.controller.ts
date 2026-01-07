@@ -7,6 +7,7 @@ import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
 import { ObjectId } from "mongodb";
 import { bootcampService } from "../services/bootcamp.service.js";
 import mongoose from "mongoose";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 export const getBootcamps = async (
   req: Request,
@@ -43,13 +44,10 @@ export const getBootcampById = async (
 ) => {
   const { id } = req.params;
 
-  // 400: invalid ObjectId
-//   if (!mongoose.Types.ObjectId.isValid(id)) {
-//     return res.status(400).json({
-//       success: false,
-//       error: `Invalid bootcamp id: ${id}`,
-//     });
-//   }
+  //   400: invalid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    next(new ErrorResponse(`Invalid bootcamp id: ${id}`, 400));
+  }
 
   try {
     // retrieve bootcamp with given id using bootcamp service
@@ -58,10 +56,7 @@ export const getBootcampById = async (
     // 404: not found
     if (!bootcamp) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      next(new ErrorResponse(`Bootcamp with id ${id} not found`, 404));
     }
 
     return res.status(200).json({
@@ -70,13 +65,7 @@ export const getBootcampById = async (
       bootcamp,
     });
   } catch (err: any) {
-    next(err);
-
-    // return res.status(500).json({
-    //   success: false,
-    //   error: `Server Error (GET /api/v1/bootcamps/${id}): ${err.message}`,
-    //   stack: err.stack,
-    // });
+    next(new ErrorResponse(`Server Error (GET /api/v1/bootcamps/${id})`, 500));
   }
 };
 
