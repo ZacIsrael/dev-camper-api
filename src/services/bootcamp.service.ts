@@ -29,4 +29,9 @@ export const bootcampService = {
     // saves the created video into the bootcamp MongoDB collection
     return await bootcamp.save();
   },
+  // returns a promise that has an array of elements with the BootcampType structure
+  async getAllBootcamps(): Promise<BootcampType[]> {
+    // retrieves all of the bootcamp documents from the bootcamp MongoDB collection
+    return await Bootcamp.find();
+  },
 };
