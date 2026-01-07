@@ -11,10 +11,27 @@ export const getBootcamps = async (
   res: Response,
   next: NextFunction
 ) => {
-  // use service retrieve all bootcamps
+  try {
+    // use service retrieve all bootcamps
+    const bootcamps = await bootcampService.getAllBootcamps();
 
-  // send response to route
-  res.status(200).json({ success: true, msg: "Show all bootcamps." });
+    // send response to route
+    res.status(200).json({
+      success: true,
+      msg:
+        // necessary message gets displayed depending on if the videos collection is empty or not
+        bootcamps.length === 0
+          ? "There are no bootcamps in the 'bootcamp' mongoDB collection."
+          : "Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection.",
+      bootcamps,
+    });
+  } catch (err: any) {
+    // error occured when retrieving all bootcamp documents from the bootcamp MongoDB collection
+    res.status(500).json({
+      error: `Server Error (GET /api/v1/bootcamps): ${err.message}`,
+      stack: err.stack,
+    });
+  }
 };
 
 export const getBootcampById = async (
