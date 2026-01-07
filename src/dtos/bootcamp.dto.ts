@@ -74,7 +74,7 @@ export class CreateBootcampDTO {
   // Constructor receives raw request body data
   // Uses Partial to allow missing optional fields
   constructor(data: Partial<CreateBootcampDTO>) {
-    // -------------------- Required data --------------------
+    //  Required data 
 
     // Validate presence and format of name
     if (!isNonEmptyString(data.name)) {
@@ -141,7 +141,7 @@ export class CreateBootcampDTO {
     // Assign validated careers array
     this.careers = careers;
 
-    // -------------------- Optional data --------------------
+    // Optional data 
 
     // Validate website if provided
     if (data.website !== undefined) {
