@@ -135,13 +135,14 @@ export const addBootcamp = async (
     console.log("controller: err.name = ", err.name);
 
     // Error inserting the bootcamp into the mongoDB collection
-    res.status(500).json({
-      error: `Server Error (POST /api/v1/bootcamps): ${err.message}`,
-      stack: err.stack,
-    });
+
+    // res.status(500).json({
+    //   error: `Server Error (POST /api/v1/bootcamps): ${err.message}`,
+    //   stack: err.stack,
+    // });
 
     // if err.code = duplicate key, then set the status code to 400
-    // next(new ErrorResponse(err, 500));
+    next(new ErrorResponse(err, 500));
     // next(new ErrorResponse(`Server Error (POST /api/v1/bootcamps))`, 500));
   }
 };

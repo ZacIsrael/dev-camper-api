@@ -1,9 +1,11 @@
-export class ErrorResponse extends Error {
-  public statusCode: number;
+import { Error } from "mongoose";
 
-  constructor(message: string, statusCode: number) {
-    // Call the parent Error constructor with the message
-    super(message);
+export class ErrorResponse {
+  public statusCode: number;
+  public error: Error;
+
+  constructor(error: Error, statusCode: number) {
+    this.error = error;
 
     // Set the HTTP status code for this custom error
     this.statusCode = statusCode;
