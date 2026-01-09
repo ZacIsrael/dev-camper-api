@@ -5,6 +5,7 @@
     "moduleResolution": "NodeNext",
     "verbatimModuleSyntax": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "outDir": "dist",
     "rootDir": "src"
