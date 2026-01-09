@@ -22,7 +22,7 @@ export const errorHandler = (
 
   // Mongo duplicate key error
   if (err.error instanceof MongoServerError && err.error.code === 11000) {
-    statusCode = 400;
+    statusCode = 409;
     message =
       "Duplicate field value entered; A bootcamp with that name already exists.";
   }
