@@ -27,7 +27,7 @@ export const errorHandler = (
       "Duplicate field value entered; A bootcamp with that name already exists.";
   }
 
-  res.status(statusCode || err.statusCode).json({
+  res.status(statusCode || err.statusCode || 500).json({
     success: false,
     error: message || err.message,
   });
