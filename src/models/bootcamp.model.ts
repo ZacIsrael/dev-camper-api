@@ -6,9 +6,13 @@ import mongoose, {
   type HydratedDocument,
 } from "mongoose";
 
-import type { BootcampType } from "../types/bootcamp.interface.js";
+import type {
+  BootcampType,
+} from "../types/bootcamp.interface.js";
 
 import slugify from "slugify";
+
+import { geocoder } from "../utils/geocoder.js";
 
 /*
 
@@ -160,6 +164,42 @@ bootcampSchema.pre<HydratedDocument<BootcampType>>(
       lower: true,
       trim: true,
     });
+    // Because this middleware is async, Mongoose automatically proceeds
+    // once the Promise resolves, so calling `next()` is NOT required here
+  }
+);
+
+// Geocode & create location field
+bootcampSchema.pre<HydratedDocument<BootcampType>>(
+  "save",
+  async function (next) {
+    const loc = await geocoder.geocode(this.address);
+
+    // Ensure geocoding returned results
+    if (!loc.length) {
+      throw new Error("Geocoding failed: no location found");
+    }
+
+    const { latitude, longitude } = loc[0];
+
+    // Ensure both values exist
+    if (latitude == null || longitude == null) {
+      throw new Error("Geocoding failed: invalid coordinates");
+    }
+
+    this.location.type = "Point";
+    this.location.coordinates = [longitude, latitude];
+    this.location.formattedAddress = loc[0].formattedAddress;
+    this.location.street = loc[0].streetName;
+    this.location.city = loc[0].city;
+    this.location.state = loc[0].stateCode;
+    this.location.zipcode = loc[0].zipcode;
+    this.location.country = loc[0].countryCode;
+
+    // No longer necessary to save the address field into the database 
+    // because we have the geo location
+    this.address = '';
+
     // Because this middleware is async, Mongoose automatically proceeds
     // once the Promise resolves, so calling `next()` is NOT required here
   }
