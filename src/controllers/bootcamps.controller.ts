@@ -8,7 +8,169 @@ import { ObjectId } from "mongodb";
 import { bootcampService } from "../services/bootcamp.service.js";
 import mongoose from "mongoose";
 import { ErrorResponse } from "../utils/errorResponse.js";
+import { asyncHandler } from "../middleware/async.middleware.js";
 
+/* ==== Implementation with middleware async handler ==== */
+export const getBootcamps = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // use service retrieve all bootcamps
+    const bootcamps = await bootcampService.getAllBootcamps();
+
+    // send response to route
+    res.status(200).json({
+      success: true,
+      msg:
+        // necessary message gets displayed depending on if the videos collection is empty or not
+        bootcamps.length === 0
+          ? "There are no bootcamps in the 'bootcamp' mongoDB collection."
+          : "Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection.",
+      bootcamps,
+      length: bootcamps.length,
+    });
+  }
+);
+
+export const getBootcampById = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    //   400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid bootcamp id: ${id}`,
+      });
+    }
+
+    // retrieve bootcamp with given id using bootcamp service
+    const bootcamp = await bootcampService.getBootcampById(id);
+
+    // 404: not found
+    if (!bootcamp) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      msg: `Bootcamp with id = ${id} successfully retrieved.`,
+      bootcamp,
+    });
+  }
+);
+
+export const addBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // see what's in the body of the request
+    console.log("addBootcamp: req.body = ", req.body);
+
+    // data transfer object (object that will contained the processed request)
+    let dto: CreateBootcampDTO;
+
+    // process the body of the request (see bootcampo.dto.js)
+    dto = new CreateBootcampDTO(req.body);
+    console.log("addBootcamp: dto = ", dto);
+
+    // use service to add bootcamp
+    const bootcamp = await bootcampService.createBootcamp(dto);
+    // send response to route
+    res
+      .status(201)
+      .json({ success: true, msg: "Bootcamp successfully added.", bootcamp });
+  }
+);
+
+export const updateBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // obtain the bootcamp's id from the route parameter
+    const { id } = req.params;
+    const { body } = req;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid bootcamp id: ${id}`,
+      });
+    }
+
+    // use service to update a bootcamp
+    const bootcamp = await bootcampService.updateBootcampById(id, body);
+
+    // 404: not found
+    if (!bootcamp) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+
+    // send response to route
+    res.status(200).json({
+      success: true,
+      msg: `Bootcamp with id = ${id} successfully modified.`,
+      bootcamp,
+    });
+  }
+);
+
+export const replaceBootcamp = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  // obtain the bootcamp's id from the route parameter
+  const { id } = req.params;
+
+  // use service to replace a bootcamp
+
+  // send response to route
+  res.status(200).json({
+    success: true,
+    msg: `Bootcamp with id = ${id} successfully replaced.`,
+  });
+};
+
+export const deleteBootcamp = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // obtain the bootcamp's id from the route parameter
+    const { id } = req.params;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid bootcamp id: ${id}`,
+      });
+    }
+
+    // use service to delete a bootcamp
+    const deleted = bootcampService.deleteBootcampById(id);
+
+    // 404: not found
+    if (!deleted) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+
+    // send repsonse to route
+    res.status(204).json({
+      success: true,
+      msg: `Bootcamp with id = ${id} successfully deleted.`,
+      deleted,
+    });
+  }
+);
+
+/* ==== Implementation without middleware async handler ==== */
+/*
 export const getBootcamps = async (
   req: Request,
   res: Response,
@@ -27,6 +189,7 @@ export const getBootcamps = async (
           ? "There are no bootcamps in the 'bootcamp' mongoDB collection."
           : "Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection.",
       bootcamps,
+      length: bootcamps.length
     });
   } catch (err: any) {
     // logs for debugging
@@ -274,3 +437,4 @@ export const deleteBootcamp = async (
     next(new ErrorResponse(err, 500));
   }
 };
+*/
