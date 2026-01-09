@@ -1,7 +1,14 @@
 // MongoDB module
-import mongoose, { Document, Schema, model } from "mongoose";
+import mongoose, {
+  Document,
+  Schema,
+  model,
+  type HydratedDocument,
+} from "mongoose";
 
 import type { BootcampType } from "../types/bootcamp.interface.js";
+
+import slugify from "slugify";
 
 /*
 
@@ -135,6 +142,28 @@ const bootcampSchema = new Schema<BootcampType>({
     default: Date.now,
   },
 });
+
+// Create bootcamp slug from the name
+// Pre-save middleware that runs BEFORE a Bootcamp document is saved to MongoDB
+bootcampSchema.pre<HydratedDocument<BootcampType>>(
+  "save",
+  // Async middleware function executed during the `.save()` lifecycle
+  async function (next) {
+    // Cast the current Mongoose document (`this`) to the BootcampType
+    // This allows TypeScript to recognize custom Bootcamp fields like `slug`
+    const bootcamp = this as BootcampType;
+    console.log("bootcampSchema.pre: bootcamp: ", bootcamp);
+
+    // Generate a URL-friendly slug from the bootcamp's name
+    // `slugify` converts the name to lowercase and trims extra whitespace
+    bootcamp.slug = (slugify as unknown as Function)(this.name, {
+      lower: true,
+      trim: true,
+    });
+    // Because this middleware is async, Mongoose automatically proceeds
+    // once the Promise resolves, so calling `next()` is NOT required here
+  }
+);
 
 // create and export this Bootcamp model
 export const Bootcamp = model<BootcampType>("Bootcamp", bootcampSchema);
