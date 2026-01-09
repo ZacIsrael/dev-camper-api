@@ -1,3 +1,7 @@
+// This file handles ALL errors that occur when inserting or retrieving data from MongoDB
+// Yes, these are "server" side errors BUT but depending on the message, they could be
+// due to a bad request from the user.
+
 import type { NextFunction, Request, Response } from "express";
 import { MongoServerError } from "mongodb";
 

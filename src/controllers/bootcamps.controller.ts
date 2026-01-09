@@ -34,12 +34,12 @@ export const getBootcamps = async (
     console.log("controller: err.name = ", err.name);
 
     // error occured when retrieving all bootcamp documents from the bootcamp MongoDB collection
-    res.status(500).json({
-      error: `Server Error (GET /api/v1/bootcamps): ${err.message}`,
-      stack: err.stack,
-    });
+    // res.status(500).json({
+    //   error: `Server Error (GET /api/v1/bootcamps): ${err.message}`,
+    //   stack: err.stack,
+    // });
 
-    // next(new ErrorResponse(`Server Error (GET /api/v1/bootcamps`, 500));
+    next(new ErrorResponse(err, 500));
   }
 };
 
@@ -85,12 +85,12 @@ export const getBootcampById = async (
     console.log("controller: err = ", err);
     console.log("controller: err.name = ", err.name);
 
-    res.status(500).json({
-      error: `Server Error (GET /api/v1/bootcamps/${id}): ${err.message}`,
-      stack: err.stack,
-    });
+    // res.status(500).json({
+    //   error: `Server Error (GET /api/v1/bootcamps/${id}): ${err.message}`,
+    //   stack: err.stack,
+    // });
 
-    // next(new ErrorResponse(`Server Error (GET /api/v1/bootcamps/${id})`, 500));
+    next(new ErrorResponse(err, 500));
   }
 };
 
@@ -116,6 +116,9 @@ export const addBootcamp = async (
       error: `Bad Request (POST /api/v1/bootcamps): ${err.message}`,
       stack: err.stack,
     });
+    // console.log("controller: err = ", err);
+    // console.log("controller: err.name = ", err.name);
+    // next(new ErrorResponse(err, 400));
     return;
 
     // next(new ErrorResponse(`Bad Request (POST /api/v1/bootcamps)`, 400));
@@ -192,15 +195,13 @@ export const updateBootcamp = async (
     console.log("controller: err = ", err);
     console.log("controller: err.name = ", err.name);
 
-    return res.status(500).json({
-      success: false,
-      error: `Server Error (PATCH /api/v1/bootcamps/${id}): ${err.message}`,
-      stack: err.stack,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   error: `Server Error (PATCH /api/v1/bootcamps/${id}): ${err.message}`,
+    //   stack: err.stack,
+    // });
 
-    // next(
-    //   new ErrorResponse(`Server Error (PATCH /api/v1/bootcamps/${id})`, 500)
-    // );
+    next(new ErrorResponse(err, 500));
   }
 };
 
@@ -264,14 +265,12 @@ export const deleteBootcamp = async (
     console.log("controller: err = ", err);
     console.log("controller: err.name = ", err.name);
 
-    return res.status(500).json({
-      success: false,
-      error: `Server Error (DELETE /api/v1/bootcamps/${id}): ${err.message}`,
-      stack: err.stack,
-    });
+    // return res.status(500).json({
+    //   success: false,
+    //   error: `Server Error (DELETE /api/v1/bootcamps/${id}): ${err.message}`,
+    //   stack: err.stack,
+    // });
 
-    // next(
-    //   new ErrorResponse(`Server Error (DELETE /api/v1/bootcamps/${id})`, 500)
-    // );
+    next(new ErrorResponse(err, 500));
   }
 };
