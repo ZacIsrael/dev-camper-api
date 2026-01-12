@@ -6,6 +6,7 @@ import {
   deleteBootcamp,
   getBootcampById,
   getBootcamps,
+  getBootcampsWithinARadius,
   replaceBootcamp,
   updateBootcamp,
 } from "../controllers/bootcamps.controller.js";
@@ -17,6 +18,9 @@ router.get("/", getBootcamps);
 
 // Get a bootcamp with a specific id
 router.get("/:id", getBootcampById);
+
+// Get all bootcamps within a certain distance (mile radius) of a zipcode
+router.get("/radius/:zipcode/:distance", getBootcampsWithinARadius);
 
 // Add a bootcamp
 router.post("/", addBootcamp);
