@@ -53,7 +53,7 @@ const bootcampSchema = new Schema<BootcampType>({
     type: String,
     required: [true, "Please add a description"],
 
-    maxLength: [165, "Description can't be longer than 165 characters"],
+    maxLength: [250, "Description can't be longer than 250 characters"],
   },
   website: {
     type: String,
