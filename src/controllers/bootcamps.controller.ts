@@ -9,6 +9,8 @@ import { bootcampService } from "../services/bootcamp.service.js";
 import mongoose from "mongoose";
 import { ErrorResponse } from "../utils/errorResponse.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
+import { geocoder } from "../utils/geocoder.js";
+import { Bootcamp } from "../models/bootcamp.model.js";
 
 /* ==== Implementation with middleware async handler ==== */
 export const getBootcamps = asyncHandler(
@@ -58,6 +60,59 @@ export const getBootcampById = asyncHandler(
       success: true,
       msg: `Bootcamp with id = ${id} successfully retrieved.`,
       bootcamp,
+    });
+  }
+);
+
+export const getBootcampsWithinARadius = asyncHandler(
+  // Async controller to get bootcamps within a given distance from a zipcode
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Destructure zipcode and distance from route parameters
+    const { zipcode, distance } = req.params;
+
+    // Convert distance param (string) to a number
+    const distanceNum = Number(distance);
+
+    // Validate the distance is a real number
+    if (Number.isNaN(distanceNum)) {
+      // Return 400 if distance is not numeric
+      return res.status(400).json({
+        success: false,
+        error: "Distance must be a number",
+      });
+    }
+
+    // Convert the provided zipcode into latitude and longitude
+    const loc = await geocoder.geocode(zipcode);
+
+    // Extract latitude from geocoder response
+    const lat = Number(loc[0].latitude);
+
+    // Extract longitude from geocoder response
+    const lng = Number(loc[0].longitude);
+
+    // Define the Earth’s radius in miles (used for spherical calculations)
+    const earthRadius = 3963;
+
+    // Convert distance to radians for MongoDB geospatial query
+    const radius = distanceNum / earthRadius;
+
+    // Query bootcamps within the calculated spherical radius
+    const bootcamps = await Bootcamp.find({
+      location: {
+        // Use MongoDB geospatial operator to find points within a sphere
+        $geoWithin: {
+          // Define the center point (longitude, latitude) and search radius
+          $centerSphere: [[lng, lat], radius],
+        },
+      },
+    });
+
+    // Return successful response with matching bootcamps
+    res.status(200).json({
+      success: true,
+      count: bootcamps.length,
+      data: bootcamps,
     });
   }
 );
