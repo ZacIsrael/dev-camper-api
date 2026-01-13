@@ -15,6 +15,8 @@ import { Bootcamp } from "../models/bootcamp.model.js";
 /* ==== Implementation with middleware async handler ==== */
 export const getBootcamps = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    const { query } = req;
+    console.log("req.query = ", query);
     // stores returned bootcamps
     let bootcamps;
 
@@ -24,12 +26,33 @@ export const getBootcamps = asyncHandler(
     // message returned when bootcamps are found
     let foundBootcampMsg = "";
 
+    // copy of req.query object
+    const reqQuery = { ...query };
+
+    // Fields to exclude from the request's query strings
+    const removeFields = ["select"];
+
+    // Loop over removeFields and delete them from reqQuery
+    removeFields.forEach((param) => delete reqQuery[param]);
+
+    // debugging
+    console.log("req.query after removing certain fileds: ", reqQuery);
+
+
+    let sortFields = '';
+    // Select fields (for sorting)
+    if (query.select) {
+      if (typeof query.select === 'string') {
+        sortFields = query.select.split(",").join(' ');
+      }
+      console.log("fields = ", sortFields);
+    }
+
     if (Object.keys(req.query).length > 0) {
       // Query strings exist some filtering needs to be done
-      const { query } = req;
 
       // Convert the query object into a JSON string so it can be manipulated
-      let queryStr = JSON.stringify(query);
+      let queryStr = JSON.stringify(reqQuery);
 
       // Regex expression to replace supported comparison operators with MongoDB operators
       // Example: gt -> $gt, lte -> $lte
@@ -44,7 +67,7 @@ export const getBootcamps = asyncHandler(
       // Parse the modified query string back into an object
       // and pass it to the service for filtered database retrieval
       bootcamps = await bootcampService.getFilteredBootcamps(
-        JSON.parse(queryStr)
+        JSON.parse(queryStr), sortFields
       );
 
       // Message shown when no bootcamps match the applied filters
@@ -52,7 +75,7 @@ export const getBootcamps = asyncHandler(
       foundBootcampMsg = `Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection that match the filter = ${queryStr}.`;
     } else {
       // use service retrieve all bootcamps
-      bootcamps = await bootcampService.getAllBootcamps();
+      bootcamps = await bootcampService.getAllBootcamps(sortFields);
 
       // Message shown when the collection exists but contains no bootcamps
       emptyReturnMsg =
