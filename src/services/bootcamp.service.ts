@@ -36,6 +36,13 @@ export const bootcampService = {
     return await Bootcamp.find();
   },
 
+  // returns a promise that has an array of elements with the BootcampType structure
+  async getFilteredBootcamps(filter: any): Promise<BootcampType[]> {
+    // retrieves all of the bootcamp documents from the
+    // bootcamp MongoDB collection that match the specified filter
+    return await Bootcamp.find(filter);
+  },
+
   // Retrieves a bootcamp with a given id
   async getBootcampById(id: string): Promise<BootcampType | null> {
     const bootcamp = await Bootcamp.findById(id);
@@ -66,5 +73,5 @@ export const bootcampService = {
   async deleteBootcampById(id: string) {
     // returns the deleted bootcamp or null if it never existed
     return await Bootcamp.findByIdAndDelete(id);
-  }
+  },
 };
