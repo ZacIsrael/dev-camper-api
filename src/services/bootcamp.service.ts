@@ -31,13 +31,13 @@ export const bootcampService = {
     return await bootcamp.save();
   },
   // returns a promise that has an array of elements with the BootcampType structure
-  async getAllBootcamps(select: any): Promise<BootcampType[]> {
+  async getAllBootcamps(select: any, sort: any): Promise<BootcampType[]> {
     // retrieves all of the bootcamp documents from the bootcamp MongoDB collection
     return await Bootcamp.find().select(select);
   },
 
   // returns a promise that has an array of elements with the BootcampType structure
-  async getFilteredBootcamps(filter: any, select: any): Promise<BootcampType[]> {
+  async getFilteredBootcamps(filter: any, select: any, sort: any): Promise<BootcampType[]> {
     // retrieves all of the bootcamp documents from the
     // bootcamp MongoDB collection that match the specified filter
     return await Bootcamp.find(filter).select(select);
