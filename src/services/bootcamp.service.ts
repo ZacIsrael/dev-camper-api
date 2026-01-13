@@ -31,16 +31,42 @@ export const bootcampService = {
     return await bootcamp.save();
   },
   // returns a promise that has an array of elements with the BootcampType structure
-  async getAllBootcamps(select: any, sortBy: any): Promise<BootcampType[]> {
+  async getAllBootcamps(
+    select: any,
+    sortBy: any,
+    paginationObj: any
+  ): Promise<BootcampType[]> {
     // retrieves all of the bootcamp documents from the bootcamp MongoDB collection
-    return await Bootcamp.find().select(select).sort(sortBy);
+
+    let query = Bootcamp.find();
+
+    if (select) query.select(select);
+    if (sortBy) query.sort(sortBy);
+
+    if (paginationObj?.skip >= 0) query.skip(paginationObj.skip);
+    if (paginationObj?.limit > 0) query.limit(paginationObj.limit);
+
+    return await query;
   },
 
   // returns a promise that has an array of elements with the BootcampType structure
-  async getFilteredBootcamps(filter: any, select: any, sortBy: any): Promise<BootcampType[]> {
+  async getFilteredBootcamps(
+    filter: any,
+    select: any,
+    sortBy: any,
+    paginationObj: any
+  ): Promise<BootcampType[]> {
     // retrieves all of the bootcamp documents from the
     // bootcamp MongoDB collection that match the specified filter
-    return await Bootcamp.find(filter).select(select).sort(sortBy);
+    let query = Bootcamp.find(filter);
+
+    if (select) query.select(select);
+    if (sortBy) query.sort(sortBy);
+
+    if (paginationObj?.skip >= 0) query.skip(paginationObj.skip);
+    if (paginationObj?.limit > 0) query.limit(paginationObj.limit);
+
+    return await query;
   },
 
   // Retrieves a bootcamp with a given id
