@@ -139,11 +139,13 @@ export const getBootcamps = asyncHandler(
     // send response to route
     res.status(200).json({
       success: true,
+      count: bootcamps.bootcamps.length,
+      pagination: bootcamps.pagination,
       msg:
         // necessary message gets displayed depending on if the videos collection is empty or not
-        bootcamps.length === 0 ? emptyReturnMsg : foundBootcampMsg,
+        bootcamps.bootcamps.length === 0 ? emptyReturnMsg : foundBootcampMsg,
       bootcamps,
-      length: bootcamps.length,
+      
     });
   }
 );
