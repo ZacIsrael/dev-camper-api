@@ -30,7 +30,7 @@ export const getBootcamps = asyncHandler(
     const reqQuery = { ...query };
 
     // Fields to exclude from the request's query strings
-    const removeFields = ["select"];
+    const removeFields = ["select", "sort"];
 
     // Loop over removeFields and delete them from reqQuery
     removeFields.forEach((param) => delete reqQuery[param]);
@@ -39,13 +39,22 @@ export const getBootcamps = asyncHandler(
     console.log("req.query after removing certain fileds: ", reqQuery);
 
 
-    let sortFields = '';
-    // Select fields (for sorting)
+    let selectFields = '';
+    // Select fields (for what should be returned)
     if (query.select) {
       if (typeof query.select === 'string') {
-        sortFields = query.select.split(",").join(' ');
+        selectFields = query.select.split(",").join(' ');
       }
-      console.log("fields = ", sortFields);
+      console.log("fields = ", selectFields);
+    }
+
+    let sortBy = '';
+    // Select fields (for what should be returned)
+    if (query.sort) {
+      if (typeof query.sort === 'string') {
+        sortBy = query.sort.split(",").join(' ');
+      }
+      console.log("sortBy = ", sortBy);
     }
 
     if (Object.keys(req.query).length > 0) {
@@ -67,7 +76,7 @@ export const getBootcamps = asyncHandler(
       // Parse the modified query string back into an object
       // and pass it to the service for filtered database retrieval
       bootcamps = await bootcampService.getFilteredBootcamps(
-        JSON.parse(queryStr), sortFields
+        JSON.parse(queryStr), selectFields, sortBy
       );
 
       // Message shown when no bootcamps match the applied filters
@@ -75,7 +84,7 @@ export const getBootcamps = asyncHandler(
       foundBootcampMsg = `Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection that match the filter = ${queryStr}.`;
     } else {
       // use service retrieve all bootcamps
-      bootcamps = await bootcampService.getAllBootcamps(sortFields);
+      bootcamps = await bootcampService.getAllBootcamps(selectFields, sortBy);
 
       // Message shown when the collection exists but contains no bootcamps
       emptyReturnMsg =
