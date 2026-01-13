@@ -15,8 +15,45 @@ import { Bootcamp } from "../models/bootcamp.model.js";
 /* ==== Implementation with middleware async handler ==== */
 export const getBootcamps = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    // use service retrieve all bootcamps
-    const bootcamps = await bootcampService.getAllBootcamps();
+    // stores returned bootcamps
+    let bootcamps;
+
+    // message returne when not bootcamps are found
+    let emptyReturnMsg = "";
+
+    if (Object.keys(req.query).length > 0) {
+      // Query strings exist some filtering needs to be done
+      const { query } = req;
+
+      // Convert the query object into a JSON string so it can be manipulated
+      let queryStr = JSON.stringify(query);
+
+      // Regex expression to replace supported comparison operators with MongoDB operators
+      // Example: gt -> $gt, lte -> $lte
+      queryStr = queryStr.replace(
+        /\b(gt|gte|lt|lte|in)\b/g,
+        (match) => `$${match}`
+      );
+
+      // debugging
+      console.log("queryStr = ", queryStr);
+
+      // Parse the modified query string back into an object
+      // and pass it to the service for filtered database retrieval
+      bootcamps = await bootcampService.getFilteredBootcamps(
+        JSON.parse(queryStr)
+      );
+
+      // Message shown when no bootcamps match the applied filters
+      emptyReturnMsg = `There are no bootcamps in the 'bootcamp' mongoDB collection that match filter = ${queryStr} .`;
+    } else {
+      // use service retrieve all bootcamps
+      bootcamps = await bootcampService.getAllBootcamps();
+
+      // Message shown when the collection exists but contains no bootcamps
+      emptyReturnMsg =
+        "There are no bootcamps in the 'bootcamp' mongoDB collection.";
+    }
 
     // send response to route
     res.status(200).json({
@@ -24,7 +61,7 @@ export const getBootcamps = asyncHandler(
       msg:
         // necessary message gets displayed depending on if the videos collection is empty or not
         bootcamps.length === 0
-          ? "There are no bootcamps in the 'bootcamp' mongoDB collection."
+          ? emptyReturnMsg
           : "Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection.",
       bootcamps,
       length: bootcamps.length,
