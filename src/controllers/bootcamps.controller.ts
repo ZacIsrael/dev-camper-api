@@ -30,7 +30,7 @@ export const getBootcamps = asyncHandler(
     const reqQuery = { ...query };
 
     // Fields to exclude from the request's query strings
-    const removeFields = ["select", "sort"];
+    const removeFields = ["select", "sort", "page", "limit"];
 
     // Loop over removeFields and delete them from reqQuery
     removeFields.forEach((param) => delete reqQuery[param]);
@@ -38,24 +38,60 @@ export const getBootcamps = asyncHandler(
     // debugging
     console.log("req.query after removing certain fileds: ", reqQuery);
 
-
-    let selectFields = '';
+    let selectFields = "";
     // Select fields (for what should be returned)
     if (query.select) {
-      if (typeof query.select === 'string') {
-        selectFields = query.select.split(",").join(' ');
+      if (typeof query.select === "string") {
+        selectFields = query.select.split(",").join(" ");
       }
       console.log("fields = ", selectFields);
     }
 
-    let sortBy = '';
-    // Select fields (for what should be returned)
+    let sortBy = "";
+    // Sort fields (for what the response should be sorted by)
     if (query.sort) {
-      if (typeof query.sort === 'string') {
-        sortBy = query.sort.split(",").join(' ');
+      if (typeof query.sort === "string") {
+        sortBy = query.sort.split(",").join(" ");
       }
       console.log("sortBy = ", sortBy);
     }
+
+    // Pagination
+    // Default values
+    let page = 1;
+    let limit = 25;
+    // Page number (for pagination)
+    if (query.page) {
+      if (typeof query.page === "string") {
+        const parsedPage = Number(query.page);
+
+        // Ensure page is a valid positive number
+        if (!Number.isNaN(parsedPage) && parsedPage > 0) {
+          page = parsedPage;
+        }
+      }
+    }
+
+    // Limit number (number of results per page)
+    if (query.limit) {
+      if (typeof query.limit === "string") {
+        const parsedLimit = Number(query.limit);
+
+        // Ensure limit is a valid positive number
+        if (!Number.isNaN(parsedLimit) && parsedLimit > 0) {
+          limit = parsedLimit;
+        }
+      }
+    }
+
+    let skip = (page - 1) * limit;
+
+    // pagination object to be passed to the service functions
+    let paginationObj = {
+      skip,
+      page,
+      limit,
+    };
 
     if (Object.keys(req.query).length > 0) {
       // Query strings exist some filtering needs to be done
@@ -76,7 +112,10 @@ export const getBootcamps = asyncHandler(
       // Parse the modified query string back into an object
       // and pass it to the service for filtered database retrieval
       bootcamps = await bootcampService.getFilteredBootcamps(
-        JSON.parse(queryStr), selectFields, sortBy
+        JSON.parse(queryStr),
+        selectFields,
+        sortBy,
+        paginationObj
       );
 
       // Message shown when no bootcamps match the applied filters
@@ -84,7 +123,11 @@ export const getBootcamps = asyncHandler(
       foundBootcampMsg = `Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection that match the filter = ${queryStr}.`;
     } else {
       // use service retrieve all bootcamps
-      bootcamps = await bootcampService.getAllBootcamps(selectFields, sortBy);
+      bootcamps = await bootcampService.getAllBootcamps(
+        selectFields,
+        sortBy,
+        paginationObj
+      );
 
       // Message shown when the collection exists but contains no bootcamps
       emptyReturnMsg =
