@@ -18,8 +18,11 @@ export const getBootcamps = asyncHandler(
     // stores returned bootcamps
     let bootcamps;
 
-    // message returne when not bootcamps are found
+    // message returned when not bootcamps are found
     let emptyReturnMsg = "";
+
+    // message returned when bootcamps are found
+    let foundBootcampMsg = "";
 
     if (Object.keys(req.query).length > 0) {
       // Query strings exist some filtering needs to be done
@@ -45,7 +48,8 @@ export const getBootcamps = asyncHandler(
       );
 
       // Message shown when no bootcamps match the applied filters
-      emptyReturnMsg = `There are no bootcamps in the 'bootcamp' mongoDB collection that match filter = ${queryStr} .`;
+      emptyReturnMsg = `There are no bootcamps in the 'bootcamp' mongoDB collection that match filter = ${queryStr}.`;
+      foundBootcampMsg = `Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection that match the filter = ${queryStr}.`;
     } else {
       // use service retrieve all bootcamps
       bootcamps = await bootcampService.getAllBootcamps();
@@ -53,6 +57,8 @@ export const getBootcamps = asyncHandler(
       // Message shown when the collection exists but contains no bootcamps
       emptyReturnMsg =
         "There are no bootcamps in the 'bootcamp' mongoDB collection.";
+      foundBootcampMsg =
+        "Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection.";
     }
 
     // send response to route
@@ -60,9 +66,7 @@ export const getBootcamps = asyncHandler(
       success: true,
       msg:
         // necessary message gets displayed depending on if the videos collection is empty or not
-        bootcamps.length === 0
-          ? emptyReturnMsg
-          : "Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection.",
+        bootcamps.length === 0 ? emptyReturnMsg : foundBootcampMsg,
       bootcamps,
       length: bootcamps.length,
     });
