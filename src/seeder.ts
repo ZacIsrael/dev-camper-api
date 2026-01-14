@@ -62,7 +62,7 @@ const importData = async (): Promise<void> => {
     await Bootcamp.create(bootcamps);
 
     // Insert course documents into the database
-    await Course.create(courses);
+    // await Course.create(courses);
 
     // Log success message to the console
     console.log("Data imported....".green);
@@ -85,7 +85,7 @@ const deleteData = async (): Promise<void> => {
     await Bootcamp.deleteMany();
 
     // Delete course documents from the database
-    await Course.deleteMany();
+    // await Course.deleteMany();
 
     // Log success message to the console
     console.log("Data deleted....".red);
