@@ -31,7 +31,9 @@ export class CreateCourseDTO {
   tuition: number;
   minimumSkill: string;
   scholarhipsAvailable: boolean;
-  bootcamp: string;
+  // bootcamp will be passed in via the request's parameters
+  // controller will handle its validation
+  // bootcamp: string;
   // will come back to this once user schema has been implemented
   //   user: mongoose.Schema.ObjectId;
 
@@ -93,12 +95,12 @@ export class CreateCourseDTO {
       this.scholarhipsAvailable = false;
     }
 
-    if (!isNonEmptyString(data.bootcamp)) {
-      throw new Error("Please enter an id for a bootcamp");
-    }
+    // if (!isNonEmptyString(data.bootcamp)) {
+    //   throw new Error("Please enter an id for a bootcamp");
+    // }
 
-    // Trim whitespace to prevent storing accidental leading/trailing spaces
-    const bootcampId = data.bootcamp.trim();
-    this.bootcamp = bootcampId;
+    // // Trim whitespace to prevent storing accidental leading/trailing spaces
+    // const bootcampId = data.bootcamp.trim();
+    // this.bootcamp = bootcampId;
   }
 }
