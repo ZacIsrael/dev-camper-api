@@ -68,7 +68,11 @@ export const bootcampService = {
     if (paginationObj?.limit > 0) query.limit(paginationObj.limit);
 
     // Execute the query and retrieve bootcamp results
-    let bootcamps = await query;
+
+    // populate() will allows for an array of courses to be displayed.
+    // Refer to Bootcamp model (bootcamp.model.ts) to
+    // see the definition of the virtual courses field
+    let bootcamps = await query.populate("courses");
 
     // Initialize pagination response object
     let resultPagination: Pagination = {
@@ -134,7 +138,11 @@ export const bootcampService = {
     if (paginationObj?.limit > 0) query.limit(paginationObj.limit);
 
     // Execute the query and retrieve bootcamp results
-    let bootcamps = await query;
+
+    // populate() will allows for an array of courses to be displayed.
+    // Refer to Bootcamp model (bootcamp.model.ts) to
+    // see the definition of the virtual courses field
+    let bootcamps = await query.populate("courses");
 
     // Initialize pagination response object
     let resultPagination: Pagination = {
