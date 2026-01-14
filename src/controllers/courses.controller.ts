@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { asyncHandler } from "../middleware/async.middleware.js";
 
 import { Course } from "../models/course.model.js";
+import { isNonEmptyString } from "../utils/helpers.js";
 
 export const getCourses = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -13,6 +14,9 @@ export const getCourses = asyncHandler(
     console.log("req.query = ", query);
     // stores returned courses
     let courses;
+
+    // for /api/v1/bootcamps/:bootcampId/courses route
+    const { bootcampId } = req.params;
 
     // message returned when courses are not found
     let emptyReturnMsg = "";
@@ -120,6 +124,39 @@ export const getCourses = asyncHandler(
         "Successfully retrieved all courses from the 'course' mongoDB collection.";
     }
 
+    // for /api/v1/bootcamps/:bootcampId/courses route
+    // check to see if bootcampId was passed
+    if (bootcampId !== undefined) {
+      // ensure that the bootcamp id is a non-empty string
+      if (!isNonEmptyString(bootcampId)) {
+        return res.status(400).json({
+          success: false,
+          error: "bootcampId must be a non-empty string",
+        });
+      }
+
+      //   400: invalid ObjectId
+      if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid bootcamp id: ${bootcampId}`,
+        });
+      }
+
+      // pass the id to the filter: { bootcamp: bootcampId}
+      filter.bootcamp = bootcampId;
+
+      // debugging
+      console.log(`Bootcamp id ${bootcampId} exists. Filter = `, filter);
+
+      // Message shown when no courses match the applied filters
+      emptyReturnMsg = `There are no courses in the 'course' mongoDB collection that belong to the bootcamp that has an id = ${bootcampId}`;
+      foundBootcampMsg = `Successfully retrieved all courses from the 'course' mongoDB collection that belong to the bootcamp that has an id = ${bootcampId}.`;
+    }
+
+    // debugging
+    console.log(`Bootcamp id does not exist. Filter = `, filter);
+
     // Parse the modified query string back into an object
     // and pass it to the service for filtered database retrieval
     courses = await courseService.getAllCourses(
@@ -150,7 +187,7 @@ export const getCourseById = asyncHandler(
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        error: `Invalid bootcamp id: ${id}`,
+        error: `Invalid course id: ${id}`,
       });
     }
 
