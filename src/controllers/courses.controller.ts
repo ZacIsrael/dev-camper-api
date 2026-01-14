@@ -173,3 +173,39 @@ export const getCourseById = asyncHandler(
     });
   }
 );
+
+
+export const updateCourse = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // obtain the course's id from the route parameter
+    const { id } = req.params;
+    const { body } = req;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid course id: ${id}`,
+      });
+    }
+
+    // use service to update a course
+    const course = await courseService.updateCourseById(id, body);
+
+    // 404: not found
+    if (!course) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Course with id ${id} not found`,
+      });
+    }
+
+    // send response to route
+    res.status(200).json({
+      success: true,
+      msg: `Course with id = ${id} successfully modified.`,
+      course
+    });
+  }
+);
