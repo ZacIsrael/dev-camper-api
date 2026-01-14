@@ -39,7 +39,7 @@ export const courseService = {
   ): Promise<{ courses: CourseType[]; pagination: Pagination }> {
     // retrieves all of the course documents from the bootcamp MongoDB collection
 
-    // total # of bootcamps in the collection
+    // total # of courses in the collection
     // Build a separate query to calculate the total number of courses
     // This is used strictly for pagination metadata (next / prev)
     let total = Course.find(filter);
@@ -48,11 +48,11 @@ export const courseService = {
     if (select) total.select(select);
     if (sortBy) total.sort(sortBy);
 
-    // Total number of bootcamps
+    // Total number of courses
     let totalCount = await total.countDocuments();
 
     // Main query used to retrieve the actual course documents
-    let query = Course.find();
+    let query = Course.find(filter);
 
     // Apply field selection if provided
     if (select) query.select(select);
