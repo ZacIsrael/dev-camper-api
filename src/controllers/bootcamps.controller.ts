@@ -144,8 +144,7 @@ export const getBootcamps = asyncHandler(
       msg:
         // necessary message gets displayed depending on if the videos collection is empty or not
         bootcamps.bootcamps.length === 0 ? emptyReturnMsg : foundBootcampMsg,
-      bootcamps,
-      
+      bootcamps: bootcamps.bootcamps,
     });
   }
 );
