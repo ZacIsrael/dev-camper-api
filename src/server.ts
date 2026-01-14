@@ -26,6 +26,7 @@ import { connectToMongoDB } from "./config/db.js";
 
 // import routes
 import bootcampsRouter from "./routes/bootcamps.route.js";
+import coursesRouter from "./routes/courses.route.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -62,6 +63,8 @@ const API_VERSION = 1;
 
 // mount the routes
 app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
+// mount the routes
+app.use(`/api/v${API_VERSION}/courses`, coursesRouter);
 
 // use custom error handler middleware
 app.use(errorHandler);
@@ -74,5 +77,7 @@ app.get("/", (req: Request, res: Response): void => {
 // Start the server and listen for incoming connections
 app.listen(PORT, () => {
   // Log confirmation that the server is running
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
+  console.log(
+    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
+  );
 });
