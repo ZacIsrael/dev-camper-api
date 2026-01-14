@@ -174,7 +174,6 @@ export const getCourseById = asyncHandler(
   }
 );
 
-
 export const updateCourse = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     // obtain the course's id from the route parameter
@@ -205,7 +204,41 @@ export const updateCourse = asyncHandler(
     res.status(200).json({
       success: true,
       msg: `Course with id = ${id} successfully modified.`,
-      course
+      course,
+    });
+  }
+);
+
+export const deleteCourse = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // obtain the course's id from the route parameter
+    const { id } = req.params;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid course id: ${id}`,
+      });
+    }
+
+    // use service to delete a course
+    const deleted = await courseService.deleteCourseById(id);
+
+    // 404: not found
+    if (!deleted) {
+      // course with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Course with id ${id} not found`,
+      });
+    }
+
+    // send repsonse to route
+    res.status(204).json({
+      success: true,
+      msg: `Course with id = ${id} successfully deleted.`,
+      deleted,
     });
   }
 );
