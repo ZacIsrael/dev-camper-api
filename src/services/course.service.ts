@@ -10,7 +10,7 @@ export const courseService = {
   // dto parameter is of type CreateCourseDTO (see course.dto.ts)
   // this function returns a promise that has the structure of CourseType (course interface)
 
-  async createCourse(dto: CreateCourseDTO): Promise<CourseType | null> {
+  async createCourse(dto: any): Promise<CourseType | null> {
     // creates a course MongoDB document with cleaned up parameters passed in
     // from the data transfer object (dto) from course.dto.ts
 
