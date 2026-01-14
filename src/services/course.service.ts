@@ -32,6 +32,7 @@ export const courseService = {
 
   // returns a promise that has an array of elements with the CourseType structure
   async getAllCourses(
+    filter: any,
     select: any,
     sortBy: any,
     paginationObj: any
@@ -41,7 +42,7 @@ export const courseService = {
     // total # of bootcamps in the collection
     // Build a separate query to calculate the total number of courses
     // This is used strictly for pagination metadata (next / prev)
-    let total = Course.find();
+    let total = Course.find(filter);
 
     // Apply the same select/sort options to keep counts consistent with the main query
     if (select) total.select(select);
