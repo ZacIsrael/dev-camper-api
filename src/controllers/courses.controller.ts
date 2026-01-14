@@ -7,6 +7,7 @@ import { asyncHandler } from "../middleware/async.middleware.js";
 
 import { Course } from "../models/course.model.js";
 import { isNonEmptyString } from "../utils/helpers.js";
+import { bootcampService } from "../services/bootcamp.service.js";
 
 export const getCourses = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -208,6 +209,63 @@ export const getCourseById = asyncHandler(
       msg: `Course with id = ${id} successfully retrieved.`,
       course,
     });
+  }
+);
+
+// /api/v1/bootcamps/:bootcampId/courses route
+export const addCourse = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { bootcampId } = req.params;
+
+    if (bootcampId === undefined) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "bootcampId must be added as a query parameter: /api/v1/bootcamps/:bootcampId/courses",
+      });
+    }
+
+    // ensure that the bootcamp id is a non-empty string
+    if (!isNonEmptyString(bootcampId)) {
+      return res.status(400).json({
+        success: false,
+        error: "bootcampId must be a non-empty string",
+      });
+    }
+
+    //   400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid bootcamp id: ${bootcampId}`,
+      });
+    }
+
+    // check to see if a bootcamp with _id = bootcampId actually exists
+    const bootcamp = await bootcampService.getBootcampById(bootcampId);
+
+    if (bootcamp === null) {
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id = ${bootcampId} not found`,
+      });
+    }
+
+    // data transfer object (object that will contain the processed request)
+    let dto: any;
+
+    // process the body of the request (see course.dto.js)
+    dto = new CreateCourseDTO(req.body);
+    // bootcampId is retrieved from the request parameters; not the body of the request
+    dto.bootcamp = bootcampId;
+    console.log("addCourse: dto = ", dto);
+
+    // use service to add course
+    const course = await courseService.createCourse(dto);
+    // send response to route
+    res
+      .status(201)
+      .json({ success: true, msg: "Course successfully added.", course });
   }
 );
 
