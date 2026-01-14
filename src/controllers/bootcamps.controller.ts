@@ -142,7 +142,7 @@ export const getBootcamps = asyncHandler(
       count: bootcamps.bootcamps.length,
       pagination: bootcamps.pagination,
       msg:
-        // necessary message gets displayed depending on if the videos collection is empty or not
+        // necessary message gets displayed depending on if the courses collection is empty or not
         bootcamps.bootcamps.length === 0 ? emptyReturnMsg : foundBootcampMsg,
       bootcamps: bootcamps.bootcamps,
     });
