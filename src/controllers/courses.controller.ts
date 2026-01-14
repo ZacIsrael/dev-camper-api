@@ -135,9 +135,41 @@ export const getCourses = asyncHandler(
       count: courses.courses.length,
       pagination: courses.pagination,
       msg:
-        // necessary message gets displayed depending on if the videos collection is empty or not
+        // necessary message gets displayed depending on if the courses collection is empty or not
         courses.courses.length === 0 ? emptyReturnMsg : foundBootcampMsg,
       courses: courses.courses,
+    });
+  }
+);
+
+export const getCourseById = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    //   400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid bootcamp id: ${id}`,
+      });
+    }
+
+    // retrieve course with given id using course service
+    const course = await courseService.getCourseById(id);
+
+    // 404: not found
+    if (!course) {
+      // course with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Course with id ${id} not found`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      msg: `Course with id = ${id} successfully retrieved.`,
+      course,
     });
   }
 );
