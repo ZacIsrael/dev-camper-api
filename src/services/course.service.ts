@@ -67,8 +67,11 @@ export const courseService = {
     if (paginationObj?.skip >= 0) query.skip(paginationObj.skip);
     if (paginationObj?.limit > 0) query.limit(paginationObj.limit);
 
-    // Execute the query and retrieve bootcamp results
-    let courses = await query;
+    // Execute the query and retrieve bootcamp results.
+
+    // populate() will allows for the entire bootcamp to be
+    // returned instead of only returning its id.
+    let courses = await query.populate("bootcamp");
 
     // Initialize pagination response object
     let resultPagination: Pagination = {
