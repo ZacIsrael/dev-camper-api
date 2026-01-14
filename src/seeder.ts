@@ -35,6 +35,11 @@ dotenv.config({
 import { Bootcamp } from "./models/bootcamp.model.js";
 import type { BootcampType } from "./types/bootcamp.interface.js";
 
+// Import the Course Mongoose model
+import { Course } from "./models/course.model.js";
+import type { CourseType } from "./types/course.interface.js";
+
+
 // Establish a connection to MongoDB using the environment variable
 await mongoose.connect(process.env.MONGO_DB_URI as string);
 
@@ -44,11 +49,20 @@ const bootcamps: BootcampType[] = JSON.parse(
   fs.readFileSync(`${__dirname}/../_data/bootcamps.json`, "utf-8")
 );
 
+// Read and parse the courses JSON seed file
+const courses: CourseType[] = JSON.parse(
+  // Read the file contents as UTF-8 text
+  fs.readFileSync(`${__dirname}/../_data/courses.json`, "utf-8")
+);
+
 // Define an async function to import seed data
 const importData = async (): Promise<void> => {
   try {
     // Insert bootcamp documents into the database
     await Bootcamp.create(bootcamps);
+
+    // Insert course documents into the database
+    await Course.create(courses);
 
     // Log success message to the console
     console.log("Data imported....".green);
@@ -69,6 +83,9 @@ const deleteData = async (): Promise<void> => {
   try {
     // Delete bootcamp documents from the database
     await Bootcamp.deleteMany();
+
+    // Delete course documents from the database
+    await Course.deleteMany();
 
     // Log success message to the console
     console.log("Data deleted....".red);
