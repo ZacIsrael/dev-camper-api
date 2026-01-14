@@ -2,6 +2,7 @@
 import express from "express";
 
 import {
+  deleteCourse,
   getCourseById,
   getCourses,
   updateCourse,
@@ -17,5 +18,8 @@ router.get("/:id", getCourseById);
 
 // Update a course
 router.patch("/:id", updateCourse);
+
+// Delete a course
+router.delete("/:id", deleteCourse);
 
 export default router;
