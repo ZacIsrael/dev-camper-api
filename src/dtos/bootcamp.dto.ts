@@ -1,6 +1,7 @@
 // This file validates and sanitizes incoming API request data
 // before it is used to create a Bootcamp document
 import type { Career } from "../types/career.type.js";
+import { isBoolean, isNonEmptyString } from "../utils/helpers.js";
 
 // Regex used to validate email format (matches mongoose schema)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,16 +25,6 @@ const CAREER_VALUES: Career[] = [
 const isCareer = (value: unknown): value is Career => {
   return typeof value === "string" && CAREER_VALUES.includes(value as Career);
 };
-
-// Utility function to check if a value is a boolean
-// Prevents truthy / falsy non-boolean values
-const isBoolean = (value: unknown): value is boolean =>
-  typeof value === "boolean";
-
-// Utility function to ensure a value is a non-empty trimmed string
-// Used for required string validation
-const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
 
 // DTO representing the expected request body for creating a bootcamp
 // Enforces the same constraints defined in the mongoose schema
@@ -74,7 +65,7 @@ export class CreateBootcampDTO {
   // Constructor receives raw request body data
   // Uses Partial to allow missing optional fields
   constructor(data: Partial<CreateBootcampDTO>) {
-    //  Required data 
+    //  Required data
 
     // Validate presence and format of name
     if (!isNonEmptyString(data.name)) {
@@ -141,7 +132,7 @@ export class CreateBootcampDTO {
     // Assign validated careers array
     this.careers = careers;
 
-    // Optional data 
+    // Optional data
 
     // Validate website if provided
     if (data.website !== undefined) {
