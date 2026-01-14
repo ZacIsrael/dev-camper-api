@@ -71,7 +71,11 @@ export const courseService = {
 
     // populate() will allows for the entire bootcamp to be
     // returned instead of only returning its id.
-    let courses = await query.populate("bootcamp");
+    let courses = await query.populate({
+      path: "bootcamp",
+      // only display the following fields from the bootcamp document
+      select: 'name description _id'
+    });
 
     // Initialize pagination response object
     let resultPagination: Pagination = {
