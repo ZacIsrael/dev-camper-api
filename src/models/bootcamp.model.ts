@@ -219,6 +219,26 @@ bootcampSchema.pre<HydratedDocument<BootcampType>>(
   }
 );
 
+// If a bootcamp is about to get deleted, delete all of its courses first
+// Query middleware that runs BEFORE a Bootcamp is deleted using `findByIdAndDelete()`
+bootcampSchema.pre("findOneAndDelete", async function () {
+  // 'this' refers to the Mongoose query, NOT the document itself
+  // 'getFilter()' retrieves the query conditions (e.g., { _id: bootcampId })
+  const docToDelete = await this.model
+    .findOne(this.getFilter())
+    // Only select the '_id' since that's all that's needed
+    // This avoids fetching unnecessary document data
+    .select("_id");
+
+  // If a matching Bootcamp document was found
+  // (must do a null check; the delete operation could be called with a non-existent ID)
+  if (docToDelete?._id) {
+    // Remove all Course documents that reference this Bootcamp
+    // via the 'bootcamp' foreign key field
+    await mongoose.model("Course").deleteMany({ bootcamp: docToDelete._id });
+  }
+});
+
 // Define a virtual field called "courses" on Bootcamp documents (not stored in MongoDB)
 bootcampSchema.virtual("courses", {
   // Tell Mongoose which model to use when populating this virtual field
