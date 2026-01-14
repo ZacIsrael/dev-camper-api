@@ -1,8 +1,11 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
 
-import { getCourseById, getCourses } from "../controllers/courses.controller.js";
-
+import {
+  getCourseById,
+  getCourses,
+  updateCourse,
+} from "../controllers/courses.controller.js";
 
 const router = express.Router();
 
@@ -10,7 +13,9 @@ const router = express.Router();
 router.get("/", getCourses);
 
 // Get course by id
-router.get("/:id", getCourseById)
+router.get("/:id", getCourseById);
 
+// Update a course
+router.patch("/:id", updateCourse);
 
 export default router;
