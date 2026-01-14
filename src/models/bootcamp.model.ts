@@ -6,9 +6,7 @@ import mongoose, {
   type HydratedDocument,
 } from "mongoose";
 
-import type {
-  BootcampType,
-} from "../types/bootcamp.interface.js";
+import type { BootcampType } from "../types/bootcamp.interface.js";
 
 import slugify from "slugify";
 
@@ -37,115 +35,131 @@ Example Bootcamp structure:
 */
 
 // schema for "bootcamp" collection
-const bootcampSchema = new Schema<BootcampType>({
-  name: {
-    type: String,
-    required: [true, "Please add a name"],
-    // can't have the same name as another bootcamp document in the collection
-    unique: true,
-    // remove leading and trailing white space
-    trim: true,
-    maxLength: [50, "Name can't be longer than 50 characters"],
-  },
-  // URL friendly version of the name
-  slug: String,
-  description: {
-    type: String,
-    required: [true, "Please add a description"],
-
-    maxLength: [250, "Description can't be longer than 250 characters"],
-  },
-  website: {
-    type: String,
-    match: [
-      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/,
-      "Please use a valid URL with HTTP or HTTPS",
-    ],
-  },
-  phone: {
-    type: String,
-    maxLength: [20, "Phone number can't be longer than 20 characters"],
-  },
-  email: {
-    type: String,
-    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please add a valid email"],
-  },
-  address: {
-    type: String,
-    required: [true, "Please add an address"],
-  },
-  location: {
-    // GeoJSON Point
-    type: {
+const bootcampSchema = new Schema<BootcampType>(
+  {
+    name: {
       type: String,
-      enum: ["Point"],
-      // required: true,
-      // just for now until I learn how to add a location
-      required: false,
+      required: [true, "Please add a name"],
+      // can't have the same name as another bootcamp document in the collection
+      unique: true,
+      // remove leading and trailing white space
+      trim: true,
+      maxLength: [50, "Name can't be longer than 50 characters"],
     },
-    coordinates: {
-      type: [Number],
-      // required: true,
-      // just for now until I learn how to add a location
-      required: false,
-      index: "2dsphere",
+    // URL friendly version of the name
+    slug: String,
+    description: {
+      type: String,
+      required: [true, "Please add a description"],
+
+      maxLength: [250, "Description can't be longer than 250 characters"],
     },
-    formattedAddress: String,
-    street: String,
-    city: String,
-    state: String,
-    zipcode: String,
-    country: String,
-  } as any,
+    website: {
+      type: String,
+      match: [
+        /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/,
+        "Please use a valid URL with HTTP or HTTPS",
+      ],
+    },
+    phone: {
+      type: String,
+      maxLength: [20, "Phone number can't be longer than 20 characters"],
+    },
+    email: {
+      type: String,
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please add a valid email"],
+    },
+    address: {
+      type: String,
+      required: [true, "Please add an address"],
+    },
+    location: {
+      // GeoJSON Point
+      type: {
+        type: String,
+        enum: ["Point"],
+        // required: true,
+        // just for now until I learn how to add a location
+        required: false,
+      },
+      coordinates: {
+        type: [Number],
+        // required: true,
+        // just for now until I learn how to add a location
+        required: false,
+        index: "2dsphere",
+      },
+      formattedAddress: String,
+      street: String,
+      city: String,
+      state: String,
+      zipcode: String,
+      country: String,
+    } as any,
 
-  careers: {
-    type: [String],
-    required: true,
-    enum: [
-      "Web Development",
-      "Mobile Development",
-      "UI/UX",
-      "Data Science",
-      "Business",
-      "Other",
-    ],
-  },
+    careers: {
+      type: [String],
+      required: true,
+      enum: [
+        "Web Development",
+        "Mobile Development",
+        "UI/UX",
+        "Data Science",
+        "Business",
+        "Other",
+      ],
+    },
 
-  averageRating: {
-    type: Number,
-    min: [1, "Rating must be at least 1"],
-    max: [10, "Rating can't be more than 10"],
-  },
+    averageRating: {
+      type: Number,
+      min: [1, "Rating must be at least 1"],
+      max: [10, "Rating can't be more than 10"],
+    },
 
-  averageCost: Number,
+    averageCost: Number,
 
-  photo: {
-    type: String,
-    // points to an image titled no-photo.jpg (will be on the frontend)
-    default: "no-photo.jpg",
-  },
+    photo: {
+      type: String,
+      // points to an image titled no-photo.jpg (will be on the frontend)
+      default: "no-photo.jpg",
+    },
 
-  housing: {
-    type: Boolean,
-    default: false,
+    housing: {
+      type: Boolean,
+      default: false,
+    },
+    jobAssistance: {
+      type: Boolean,
+      default: false,
+    },
+    jobGuarantee: {
+      type: Boolean,
+      default: false,
+    },
+    acceptGi: {
+      type: Boolean,
+      default: false,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  jobAssistance: {
-    type: Boolean,
-    default: false,
-  },
-  jobGuarantee: {
-    type: Boolean,
-    default: false,
-  },
-  acceptGi: {
-    type: Boolean,
-    default: false,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  // Schema options object (3rd argument / options param) that controls how documents are serialized
+  {
+    // Controls what happens when you a document is sent as JSON (ex: res.json(bootcamp))
+    toJSON: {
+      // Ensures virtual fields (computed / not stored in MongoDB) are included in JSON output
+      virtuals: true,
+    },
+
+    // Controls what happens when a document is converted into a plain JS object (ex: doc.toObject())
+    toObject: {
+      // Ensures virtual fields are included when converting to a plain object as well
+      virtuals: true,
+    },
+  }
+);
 
 // Create bootcamp slug from the name
 // Pre-save middleware that runs BEFORE a Bootcamp document is saved to MongoDB
@@ -196,14 +210,29 @@ bootcampSchema.pre<HydratedDocument<BootcampType>>(
     this.location.zipcode = loc[0].zipcode;
     this.location.country = loc[0].countryCode;
 
-    // No longer necessary to save the address field into the database 
+    // No longer necessary to save the address field into the database
     // because we have the geo location
-    this.address = '';
+    this.address = "";
 
     // Because this middleware is async, Mongoose automatically proceeds
     // once the Promise resolves, so calling `next()` is NOT required here
   }
 );
+
+// Define a virtual field called "courses" on Bootcamp documents (not stored in MongoDB)
+bootcampSchema.virtual("courses", {
+  // Tell Mongoose which model to use when populating this virtual field
+  ref: "Course",
+
+  // Use Bootcamp._id as the value to match against in the Course collection
+  localField: "_id",
+
+  // Match Bootcamp._id to the Course.bootcamp field (which stores the bootcamp ObjectId)
+  foreignField: "bootcamp",
+
+  // Return an array of matching Course documents (one bootcamp can have many courses)
+  justOne: false,
+});
 
 // create and export this Bootcamp model
 export const Bootcamp = model<BootcampType>("Bootcamp", bootcampSchema);
