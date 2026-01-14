@@ -13,8 +13,6 @@ export const getCourses = asyncHandler(
     console.log("req.query = ", query);
     // stores returned courses
     let courses;
-    // default value for filter if it does not exist
-    let queryStr = "";
 
     // message returned when courses are not found
     let emptyReturnMsg = "";
@@ -24,6 +22,9 @@ export const getCourses = asyncHandler(
 
     // copy of req.query object
     const reqQuery = { ...query };
+
+    // Build filter object (no JSON.parse needed)
+    let filter: Record<string, any> = { ...reqQuery };
 
     // Fields to exclude from the request's query strings
     const removeFields = ["select", "sort", "page", "limit"];
@@ -92,8 +93,8 @@ export const getCourses = asyncHandler(
     if (Object.keys(req.query).length > 0) {
       // Query strings exist some filtering needs to be done
 
-      // Convert the query object into a JSON string so it can be manipulated
-      queryStr = JSON.stringify(reqQuery);
+      // Convert to string only to run the regex operator replacement
+      let queryStr = JSON.stringify(reqQuery);
 
       // Regex expression to replace supported comparison operators with MongoDB operators
       // Example: gt -> $gt, lte -> $lte
@@ -104,6 +105,9 @@ export const getCourses = asyncHandler(
 
       // debugging
       console.log("queryStr = ", queryStr);
+
+      // Turn it back into an object (safe because queryStr is always valid JSON here)
+      filter = JSON.parse(queryStr);
 
       // Message shown when no courses match the applied filters
       emptyReturnMsg = `There are no courses in the 'course' mongoDB collection that match filter = ${queryStr}.`;
@@ -119,7 +123,7 @@ export const getCourses = asyncHandler(
     // Parse the modified query string back into an object
     // and pass it to the service for filtered database retrieval
     courses = await courseService.getAllCourses(
-      JSON.parse(queryStr),
+      filter,
       selectFields,
       sortBy,
       paginationObj
