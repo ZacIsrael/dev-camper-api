@@ -10,6 +10,7 @@ import {
   replaceBootcamp,
   updateBootcamp,
 } from "../controllers/bootcamps.controller.js";
+import { getCourses } from "../controllers/courses.controller.js";
 
 const router = express.Router();
 
@@ -21,6 +22,9 @@ router.get("/:id", getBootcampById);
 
 // Get all bootcamps within a certain distance (mile radius) of a zipcode
 router.get("/radius/:zipcode/:distance", getBootcampsWithinARadius);
+
+// Get all courses that belong to a certain bootcamp
+router.get("/:bootcampId/courses", getCourses);
 
 // Add a bootcamp
 router.post("/", addBootcamp);
