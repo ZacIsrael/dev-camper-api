@@ -11,6 +11,10 @@ import dotenv from "dotenv";
 // Import Node.js path utilities for resolving file paths
 import path from "node:path";
 
+// Express middleware used to parse and handle incoming file upload requests
+// (multipart/form-data) and expose uploaded files on `req.files`
+import fileUpload from "express-fileupload";
+
 // Import helper to convert module URL to file path (ESM-compatible)
 import { fileURLToPath } from "node:url";
 
@@ -60,6 +64,11 @@ app.use(express.json());
 const PORT = Number(process.env.PORT) || 8000;
 
 const API_VERSION = 1;
+
+// Register file upload middleware to handle multipart/form-data requests
+// This parses incoming file uploads and attaches them to 'req.files'
+// so uploaded files can be accessed in controllers and route handlers
+app.use(fileUpload());
 
 // mount the routes
 app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
