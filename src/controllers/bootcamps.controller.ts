@@ -341,6 +341,132 @@ export const deleteBootcamp = asyncHandler(
   }
 );
 
+// PATCH method: update a bootcamp with a photo
+// PATCH /api/v1/bootcamps/:id/photo
+export const uploadBootcampPhoto = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // retrieve the bootcamp's id from the query parameters
+    const { id } = req.params;
+
+    // retrieve uploaded file(s)
+    const { files } = req;
+
+    //   400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid bootcamp id: ${id}`,
+      });
+    }
+
+    // retrieve bootcamp with given id using bootcamp service
+    const bootcamp = await bootcampService.getBootcampById(id);
+
+    // 404: not found
+    if (!bootcamp) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+
+    // a file was not uploaded
+    if (files === undefined || files === null) {
+      return res.status(400).json({
+        success: false,
+        error: "Please upload a file",
+      });
+    }
+
+    const file = files.file;
+
+    // extra null check; a file was not uploaded
+    if (file === undefined || file === null) {
+      return res.status(400).json({
+        success: false,
+        error: "Please upload a file",
+      });
+    }
+    // a file was uploaded
+    console.log("controller(uploadBootcampPhoto): File = ", file);
+    /*
+
+    Structure of req.files.file:
+
+      {
+        name: 'file-name.jpg',
+        data: <Buffer ff d8 ff e0 00 10 4a 46 49 46 00 01 02 01 00 48 00 48 00 00 ff e2 0c 58 49 43 43 5f 50 52 4f 46 49 4c 45 00 01 01 00 00 0c 48 4c 69 6e 6f 02 10 00 00 ... 2083520 more bytes>,
+        size: 2083570,
+        encoding: '7bit',
+        tempFilePath: '',
+        truncated: false,
+        mimetype: 'image/jpeg',
+        md5: 'c94227df1c3fa58656d67e51fc699595',
+        mv: [Function: mv]
+      }
+
+    */
+
+    // User uploaded multiple files when they should've
+    // only uploaded 1 image for this function
+    if (Array.isArray(file)) {
+      return res.status(400).json({
+        success: false,
+        error: "Please only upload 1 file",
+      });
+    }
+
+    // Ensure that the file uploaded is a photo
+    if (!file.mimetype.startsWith("image")) {
+      return res.status(400).json({
+        success: false,
+        error: "Please upload a valid photo",
+      });
+    }
+
+    // Max size an uploaded file can be
+    const maxSize = Number(process.env.MAX_FILE_UPLOAD) || 3000000;
+    // Check file size
+    if (file.size > maxSize) {
+      return res.status(400).json({
+        success: false,
+        error: `Please upload a photo that is ${maxSize} bytes or less`,
+      });
+    }
+
+    // Create custom file name
+    const newFileName = `photo_${bootcamp._id}_${file.name}`;
+
+    // Directory of where the file will be stored
+    const uploadFileDirectory =
+      (process.env.FILE_UPLOAD_PATH as string) || "./public/uploads";
+
+    // uplaod the file to the specified directory
+    file.mv(`${uploadFileDirectory}/${newFileName}`, async (err) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          error: `Issue with file upload`,
+          err,
+        });
+      }
+
+      // req.files.file is 1 image; now, the bootcamp can be updated with this image
+      const updatedBootcamp = await bootcampService.updateBootcampById(id, {
+        photo: newFileName,
+      });
+
+      // send response to route
+      res.status(200).json({
+        success: true,
+        msg: `Successfully added photo = ${file.name} to bootcamp with id = ${id}.`,
+        bootcamp: updatedBootcamp,
+      });
+    });
+  }
+);
+
 /* ==== Implementation without middleware async handler ==== */
 /*
 export const getBootcamps = async (
