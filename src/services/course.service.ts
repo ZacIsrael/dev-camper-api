@@ -74,7 +74,7 @@ export const courseService = {
     let courses = await query.populate({
       path: "bootcamp",
       // only display the following fields from the bootcamp document
-      select: 'name description _id'
+      select: 'name description'
     });
 
     // Initialize pagination response object
