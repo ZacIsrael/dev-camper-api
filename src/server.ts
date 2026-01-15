@@ -70,6 +70,11 @@ const API_VERSION = 1;
 // so uploaded files can be accessed in controllers and route handlers
 app.use(fileUpload());
 
+// Configure Express to serve static files (such as uploaded photos)
+// from the root-level 'public' directory
+app.use(express.static(path.join(__dirname, "../public")));
+
+
 // mount the routes
 app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
 // mount the routes
