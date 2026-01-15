@@ -9,6 +9,7 @@ import {
   getBootcampsWithinARadius,
   replaceBootcamp,
   updateBootcamp,
+  uploadBootcampPhoto,
 } from "../controllers/bootcamps.controller.js";
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
@@ -37,6 +38,9 @@ router.put("/:id", replaceBootcamp);
 
 // Update a bootcamp
 router.patch("/:id", updateBootcamp);
+
+// Upload a photo to a bootcamp
+router.patch("/:id/photo", uploadBootcampPhoto);
 
 // Delete a bootcamp
 router.delete("/:id", deleteBootcamp);
