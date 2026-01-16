@@ -32,6 +32,8 @@ const userSchema = new Schema<UserType>({
     type: String,
     required: true,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please add a valid email"],
+    // no 2 users/accounts can have the sam email
+    unique: true
   },
   role: {
     type: String,
