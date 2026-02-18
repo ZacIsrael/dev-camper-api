@@ -49,6 +49,13 @@ const userSchema = new Schema<UserType>({
     // a user is retrieved via an API call.
     select: false,
   },
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+
 });
 
 // create and export this User model
