@@ -31,6 +31,7 @@ import { connectToMongoDB } from "./config/db.js";
 // import routes
 import bootcampsRouter from "./routes/bootcamps.route.js";
 import coursesRouter from "./routes/courses.route.js";
+import authRouter from "./routes/auth.route.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -77,8 +78,8 @@ app.use(express.static(path.join(__dirname, "../public")));
 
 // mount the routes
 app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
-// mount the routes
 app.use(`/api/v${API_VERSION}/courses`, coursesRouter);
+app.use(`/api/v${API_VERSION}/auth`, authRouter);
 
 // use custom error handler middleware
 app.use(errorHandler);
