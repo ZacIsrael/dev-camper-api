@@ -21,14 +21,16 @@ export const register = asyncHandler(
     dto = new CreateUserDTO(req.body);
     console.log("register: dto = ", dto);
 
-    // create the user via the service layer
-    const user = await userService.createUser(dto);
+    // Create the user via the service layer.
+    // createUser returns a the newly created user MongoDB document and its jwt token
+    const { user, token } = await userService.createUser(dto);
 
     // send response
     return res.status(201).json({
       success: true,
       msg: "User successfully registered.",
-      user,
+      user: user,
+      token,
     });
   }
 );
