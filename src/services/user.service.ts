@@ -2,13 +2,16 @@
 
 import type { CreateUserDTO } from "../dtos/user.dto.js";
 import { User } from "../models/user.model.js";
+import type { UserDocument } from "../models/user.model.js";
 import type { UserType } from "../types/user.interface.js";
 import type { Pagination } from "../types/pagination.interface.js";
 
 export const userService = {
   // dto parameter is of type CreateUserDTO (see user.dto.ts)
   // this function returns a promise that has the structure of UserType (user interface)
-  async createUser(dto: CreateUserDTO): Promise<UserType> {
+  async createUser(
+    dto: CreateUserDTO
+  ): Promise<{ user: UserDocument; token: string }> {
     // Creates a user MongoDB document with cleaned up parameters passed in
     // from the data transfer object (dto) from user.dto.ts
     const user = new User({
@@ -17,9 +20,13 @@ export const userService = {
       role: dto.role,
       password: dto.password,
     });
-
     // Saves the created user into the users MongoDB collection
-    return await user.save();
+    const savedUser = await user.save();
+    // Create jwt token
+    const token = savedUser.getSignedJwtToken();
+
+    // return newly created user and jwt token back to the controller function
+    return { user: savedUser, token };
   },
 
   // returns a promise that has an array of elements with the UserType structure
@@ -160,7 +167,7 @@ export const userService = {
   async getUserByEmail(
     email: string,
     includePassword = false
-  ): Promise<UserType | null> {
+  ): Promise<UserDocument | null> {
     // Create the query once
     const query = User.findOne({ email });
 
