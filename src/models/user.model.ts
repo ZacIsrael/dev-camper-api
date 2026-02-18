@@ -33,17 +33,21 @@ const userSchema = new Schema<UserType>({
     required: true,
     match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please add a valid email"],
     // no 2 users/accounts can have the sam email
-    unique: true
+    unique: true,
   },
   role: {
     type: String,
     required: true,
     enum: ["user", "publisher"],
-    default: 'user'
+    default: "user",
   },
   password: {
     type: String,
     required: true,
+    minLength: 6,
+    // Prevents password from being displayed when
+    // a user is retrieved via an API call.
+    select: false,
   },
 });
 
