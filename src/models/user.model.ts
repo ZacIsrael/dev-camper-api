@@ -3,6 +3,11 @@ import mongoose, { Schema, model } from "mongoose";
 
 import type { UserType } from "../types/user.interface.js";
 
+// Import the Mongoose document type for proper `this` typing
+import type { HydratedDocument } from "mongoose";
+
+import bcrypt from "bcryptjs";
+
 /*
 
     Example User structure:
@@ -53,9 +58,28 @@ const userSchema = new Schema<UserType>({
   resetPasswordExpire: Date,
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
+});
 
+// Encrypt password using bcrypt
+
+// Pre-save middleware that hashes the user's password
+// Runs automatically whenever a user document is saved
+
+userSchema.pre("save", async function () {
+  // `this` refers to the document being saved
+  const user = this as HydratedDocument<UserType>;
+
+  // Only hash if password was modified
+  // Prevents re-hashing when updating other fields
+  if (!user.isModified("password")) return;
+
+  // Generate salt (10 rounds is standard)
+  const salt = await bcrypt.genSalt(10);
+
+  // Hash password and replace plaintext value
+  user.password = await bcrypt.hash(user.password, salt);
 });
 
 // create and export this User model
