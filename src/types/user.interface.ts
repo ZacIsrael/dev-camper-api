@@ -17,11 +17,11 @@
 */
 
 // MongoDB module
-import mongoose, { Document, Schema } from "mongoose";
+import { Document, Schema, Types } from "mongoose";
 
-export interface UserType extends Document {
+export interface UserType {
   // When creating a User, _id doesn’t exist yet. But when reading or updating users, it will.
-  _id: mongoose.Types.ObjectId;
+  _id: Types.ObjectId;
   name: string;
   email: string;
   // enum: "user" or "publisher"
