@@ -2,7 +2,6 @@
 // In other words, it reflects exactly what a document entry
 // looks like in the "users" collection in MongoDB.
 
-
 /*
 
     Example User structure:
@@ -28,5 +27,7 @@ export interface UserType extends Document {
   // enum: "user" or "publisher"
   role: string;
   password: string;
-
+  resetPasswordToken: string;
+  resetPasswordExpire: Date;
+  createdAt: Date;
 }
