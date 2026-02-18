@@ -25,7 +25,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export class CreateUserDTO {
   name: string;
   email: string;
-  role: string;
+  role?: "user" | "publisher";
   password: string;
 
   // Constructor receives raw request body data
@@ -62,18 +62,23 @@ export class CreateUserDTO {
     // Assign validated email
     this.email = email;
 
-    if (!isNonEmptyString(data.role)) {
-      throw new Error('Please add a role for the user: "user" or "publisher"');
-    }
+    // If role is provided, validate it
+    if (data.role !== undefined) {
+      if (!isNonEmptyString(data.role)) {
+        throw new Error(
+          'If provided, role must be a non-empty string: "user" or "publisher"'
+        );
+      }
 
-    if (data.role !== "user" && data.role !== "publisher") {
-      throw new Error(
-        'Please add a valid role for the user: "user" or "publisher"'
-      );
-    }
+      if (data.role !== "user" && data.role !== "publisher") {
+        throw new Error(
+          'Please add a valid role for the user: "user" or "publisher"'
+        );
+      }
 
-    // Assign validated role
-    this.role = data.role;
+      // Assign validated role
+      this.role = data.role;
+    }
 
     if (!isNonEmptyString(data.password)) {
       throw new Error("Please enter a password");
