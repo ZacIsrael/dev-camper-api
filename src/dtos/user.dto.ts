@@ -87,3 +87,31 @@ export class CreateUserDTO {
     this.password = data.password;
   }
 }
+
+// DTO representing the expected request body for logging a user in
+export class LoginDTO {
+  email: string;
+  password: string;
+
+  constructor(data: any) {
+    if (!isNonEmptyString(data.email)) {
+      throw new Error("Email must be a non-empty string");
+    }
+
+    // Trim email
+    const email = data.email.trim();
+
+    // Enforce email regex from schema
+    if (!EMAIL_REGEX.test(email)) {
+      throw new Error("Please add a valid email");
+    }
+
+    // Assign validated email
+    this.email = email;
+
+    if (!isNonEmptyString(data.password)) {
+      throw new Error("Please provide a password");
+    }
+    this.password = data.password;
+  }
+}
