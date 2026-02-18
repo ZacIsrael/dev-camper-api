@@ -39,6 +39,7 @@ const userSchema = new Schema<UserType>({
     type: String,
     required: true,
     enum: ["user", "publisher"],
+    default: 'user'
   },
   password: {
     type: String,
