@@ -1,12 +1,54 @@
 // MongoDB module
-import mongoose, { Schema, model } from "mongoose";
+import mongoose, { Schema, model, Model } from "mongoose";
 
 import type { UserType } from "../types/user.interface.js";
 
 // Import the Mongoose document type for proper `this` typing
 import type { HydratedDocument } from "mongoose";
 
+// Instance methods that exist on a hydrated user document
+export type UserMethods = {
+  // Returns signed JWT string
+  getSignedJwtToken(): string;
+};
+
+// The actual document type returned by Mongoose (fields + methods)
+export type UserDocument = HydratedDocument<UserType, UserMethods>;
+
+type UserModel = Model<UserType, {}, UserMethods>;
+
 import bcrypt from "bcryptjs";
+
+// Import the jwt module which contains sign function
+import jwt from "jsonwebtoken";
+
+// Import jwt types for proper TypeScript safety
+import type { Secret, SignOptions } from "jsonwebtoken";
+
+// Loads environment variables from a `.env` file into process.env
+// Used for storing sensitive data like database credentials, API keys, etc.
+import dotenv from "dotenv";
+
+// Import Node.js path utilities for resolving file paths
+import path from "node:path";
+
+// Import helper to convert module URL to file path (ESM-compatible)
+import { fileURLToPath } from "node:url";
+
+// Must be called immediately after importing to make env vars available
+dotenv.config();
+
+// Convert the current module URL into an absolute file path
+const __filename = fileURLToPath(import.meta.url);
+
+// Derive the directory name from the current file path
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from custom config env file
+dotenv.config({
+  // Resolve the absolute path to config.env
+  path: path.resolve(__dirname, "../config/config.env"),
+});
 
 /*
 
@@ -23,7 +65,7 @@ import bcrypt from "bcryptjs";
 */
 
 // schema for "users" collection
-const userSchema = new Schema<UserType>({
+const userSchema = new Schema<UserType, UserModel, UserMethods>({
   name: {
     type: String,
     required: [true, "Please add a name"],
@@ -63,13 +105,11 @@ const userSchema = new Schema<UserType>({
 });
 
 // Encrypt password using bcrypt
-
 // Pre-save middleware that hashes the user's password
 // Runs automatically whenever a user document is saved
-
 userSchema.pre("save", async function () {
   // `this` refers to the document being saved
-  const user = this as HydratedDocument<UserType>;
+  const user = this as UserDocument;
 
   // Only hash if password was modified
   // Prevents re-hashing when updating other fields
@@ -82,5 +122,26 @@ userSchema.pre("save", async function () {
   user.password = await bcrypt.hash(user.password, salt);
 });
 
+// Sign JWT token and return
+userSchema.methods.getSignedJwtToken = function (): string {
+  // Pull secret from env
+  const jwtSecret = process.env.JWT_SECRET;
+
+  // Fail fast if missing (prevents sign() overload issues)
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+
+  // Pull expiry from env and provide a safe default
+  const expiresIn: SignOptions["expiresIn"] = (process.env.JWT_EXPIRES_IN ??
+    "1d") as SignOptions["expiresIn"];
+
+  // Return the signed token
+  return jwt.sign({ id: this._id.toString() }, jwtSecret as Secret, {
+    expiresIn,
+  });
+};
+
 // create and export this User model
-export const User = model<UserType>("User", userSchema);
+// export const User = model<UserType>("User", userSchema);
+export const User = model<UserType, UserModel>("User", userSchema);
