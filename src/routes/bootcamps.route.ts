@@ -13,6 +13,8 @@ import {
 } from "../controllers/bootcamps.controller.js";
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
+import { protect } from "../middleware/auth.middleware.js";
+
 const router = express.Router();
 
 // Get all bootcamps
@@ -28,21 +30,21 @@ router.get("/radius/:zipcode/:distance", getBootcampsWithinARadius);
 router.get("/:bootcampId/courses", getCourses);
 
 // add a course to a certain bootcamp
-router.post("/:bootcampId/courses", addCourse);
+router.post("/:bootcampId/courses", protect, addCourse);
 
 // Add a bootcamp
-router.post("/", addBootcamp);
+router.post("/", protect, addBootcamp);
 
 // Replace a bootcamp
 router.put("/:id", replaceBootcamp);
 
 // Update a bootcamp
-router.patch("/:id", updateBootcamp);
+router.patch("/:id", protect, updateBootcamp);
 
 // Upload a photo to a bootcamp
-router.patch("/:id/photo", uploadBootcampPhoto);
+router.patch("/:id/photo", protect, uploadBootcampPhoto);
 
 // Delete a bootcamp
-router.delete("/:id", deleteBootcamp);
+router.delete("/:id", protect, deleteBootcamp);
 
 export default router;

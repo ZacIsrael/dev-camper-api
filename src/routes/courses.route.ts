@@ -8,6 +8,9 @@ import {
   updateCourse,
 } from "../controllers/courses.controller.js";
 
+import { protect } from "../middleware/auth.middleware.js";
+
+
 const router = express.Router();
 
 // Get all courses
@@ -17,9 +20,9 @@ router.get("/", getCourses);
 router.get("/:id", getCourseById);
 
 // Update a course
-router.patch("/:id", updateCourse);
+router.patch("/:id", protect, updateCourse);
 
 // Delete a course
-router.delete("/:id", deleteCourse);
+router.delete("/:id", protect, deleteCourse);
 
 export default router;
