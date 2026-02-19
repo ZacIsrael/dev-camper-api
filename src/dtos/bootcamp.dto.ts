@@ -2,6 +2,7 @@
 // before it is used to create a Bootcamp document
 import type { Career } from "../types/career.type.js";
 import { isBoolean, isNonEmptyString } from "../utils/helpers.js";
+import mongoose from "mongoose";
 
 // Regex used to validate email format (matches mongoose schema)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -31,6 +32,9 @@ const isCareer = (value: unknown): value is Career => {
 export class CreateBootcampDTO {
   // Bootcamp name (required)
   name: string;
+
+  // user that uploaded the bootcamp
+  user: mongoose.Types.ObjectId;
 
   // Bootcamp description (required)
   description: string;
@@ -82,6 +86,18 @@ export class CreateBootcampDTO {
 
     // Assign validated name to DTO
     this.name = name;
+
+    if (!isNonEmptyString(data.user)) {
+      throw new Error("Please add a user id");
+    }
+
+    // Check that the data.user is in the proper format of a Mongoose id
+    if (!mongoose.Types.ObjectId.isValid(data.user)) {
+      throw new Error("Please add a valid user id");
+    }
+
+    // Assign validated user to DTO
+    this.user = data.user;
 
     // Validate presence and format of description
     if (!isNonEmptyString(data.description)) {

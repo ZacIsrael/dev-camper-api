@@ -31,7 +31,7 @@ import type { Career } from "./career.type.js";
 interface BootcampLocation {
   type: "Point";
   // [longitude, latitude]
-  coordinates: [number, number]; 
+  coordinates: [number, number];
   formattedAddress?: string;
   street?: string;
   city?: string;
@@ -43,7 +43,8 @@ interface BootcampLocation {
 export interface BootcampType extends Document {
   // When creating a Bootcamp, _id doesn’t exist yet. But when reading or updating documents, it will.
   _id: mongoose.Types.ObjectId;
-  user: string;
+  // id of user that uplaoded the bootcamp
+  user: mongoose.Types.ObjectId;
   name: string;
   slug: string;
   description: string;

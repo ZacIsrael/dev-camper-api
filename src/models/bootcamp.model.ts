@@ -46,6 +46,12 @@ const bootcampSchema = new Schema<BootcampType>(
       trim: true,
       maxLength: [50, "Name can't be longer than 50 characters"],
     },
+    // User that uploaded the Bootcamp
+    user: {
+      type: mongoose.Schema.ObjectId,
+      required: true,
+      ref: "User",
+    },
     // URL friendly version of the name
     slug: String,
     description: {

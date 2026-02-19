@@ -14,6 +14,7 @@ export const bootcampService = {
     // from the data transfer object (dto) from bootcamp.dto.ts
     const bootcamp = new Bootcamp({
       name: dto.name,
+      user: dto.user,
       description: dto.description,
       website: dto.website,
       phone: dto.phone,
