@@ -4,7 +4,8 @@ import type { Request, Response } from "express";
 import {
   register,
   login,
-  getMe
+  getMe,
+  forgotPassword
 } from "../controllers/auth.controller.js";
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
@@ -19,5 +20,8 @@ router.post("/login", login);
 
 // Retrieves the user that's currently logged in
 router.get("/me", protect, getMe);
+
+// Executed when a user click "Forgot password" on the frontend
+router.post("/forgotpassword", forgotPassword);
 
 export default router;

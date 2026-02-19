@@ -1,6 +1,8 @@
 // MongoDB module
 import mongoose, { Schema, model, Model } from "mongoose";
 
+import crypto from "crypto";
+
 import type { UserType } from "../types/user.interface.js";
 
 // Import the Mongoose document type for proper `this` typing
@@ -13,6 +15,9 @@ export type UserMethods = {
 
   // Compares entered password with hashed password
   matchPassword(enteredPassword: string): Promise<boolean>;
+
+  // Generates a reset token; used for resetting password
+  getResetPasswordToken(): string;
 };
 
 // The actual document type returned by Mongoose (fields + methods)
@@ -154,6 +159,26 @@ userSchema.methods.matchPassword = async function (
 
   // Compare plaintext password with hashed password
   return await bcrypt.compare(enteredPassword, user.password);
+};
+
+// Generate and hash password token
+userSchema.methods.getResetPasswordToken = function () {
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString("hex");
+
+  // Hash token and set to resetPasswordToken field
+  this.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  // Set expiration of token to 10 minutes (user has 10 minutes to
+  // reset their password before thye'll have to generate another hash
+  // by clicking "forgot password" on the front end)
+  this.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000);
+
+  // Return non-hashed token (what gets emailed to the user)
+  return resetToken;
 };
 
 // create and export this User model

@@ -6,7 +6,11 @@ import bcrypt from "bcryptjs";
 
 import { asyncHandler } from "../middleware/async.middleware.js";
 
-import { CreateUserDTO, LoginDTO } from "../dtos/user.dto.js";
+import {
+  CreateUserDTO,
+  ForgotPasswordDTO,
+  LoginDTO,
+} from "../dtos/user.dto.js";
 import { userService } from "../services/user.service.js";
 
 import { isNonEmptyString } from "../utils/helpers.js";
@@ -109,12 +113,42 @@ export const login = asyncHandler(
 // Get the currently authenticated user's profile
 export const getMe = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
-   // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
+    // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
     const user = await userService.getUserById(req.user.id);
 
     res.status(200).json({
       success: true,
       data: user,
+    });
+  }
+);
+
+// function that allows a user to creat a new password
+export const forgotPassword = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    const dto = new ForgotPasswordDTO(req.body);
+
+    const user = await userService.getUserByEmail(dto.email, false);
+
+    // no user with that email exists
+    if (user === null) {
+      return res.status(404).json({
+        success: false,
+        error: `User with email = ${dto.email} not found`,
+      });
+    }
+
+    // Get reset token
+    const resetToken = user.getResetPasswordToken();
+
+    console.log('forgotPassword(): resetToken = ', resetToken);
+
+    // await userService.setPasswordResetFields(user._id.toString(), resetToken, new Date(Date.now() + 10 * 60 * 1000))
+
+    res.status(200).json({
+      success: true,
+      data: user,
+      resetToken
     });
   }
 );
