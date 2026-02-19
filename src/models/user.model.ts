@@ -10,6 +10,9 @@ import type { HydratedDocument } from "mongoose";
 export type UserMethods = {
   // Returns signed JWT string
   getSignedJwtToken(): string;
+
+  // Compares entered password with hashed password
+  matchPassword(enteredPassword: string): Promise<boolean>;
 };
 
 // The actual document type returned by Mongoose (fields + methods)
@@ -140,6 +143,17 @@ userSchema.methods.getSignedJwtToken = function (): string {
   return jwt.sign({ id: this._id.toString() }, jwtSecret as Secret, {
     expiresIn,
   });
+};
+
+// Match user entered password to hashed password in database
+userSchema.methods.matchPassword = async function (
+  enteredPassword: string
+): Promise<boolean> {
+  // `this` is the hydrated user document
+  const user = this as UserDocument;
+
+  // Compare plaintext password with hashed password
+  return await bcrypt.compare(enteredPassword, user.password);
 };
 
 // create and export this User model
