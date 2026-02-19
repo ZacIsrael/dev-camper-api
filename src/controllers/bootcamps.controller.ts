@@ -429,7 +429,7 @@ export const deleteBootcamp = asyncHandler(
 // PATCH method: update a bootcamp with a photo
 // PATCH /api/v1/bootcamps/:id/photo
 export const uploadBootcampPhoto = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
     // retrieve the bootcamp's id from the query parameters
     const { id } = req.params;
 
@@ -443,9 +443,10 @@ export const uploadBootcampPhoto = asyncHandler(
         error: `Invalid bootcamp id: ${id}`,
       });
     }
+    
 
     // retrieve bootcamp with given id using bootcamp service
-    const bootcamp = await bootcampService.getBootcampById(id);
+    let bootcamp = await bootcampService.getBootcampById(id);
 
     // 404: not found
     if (!bootcamp) {
@@ -455,6 +456,40 @@ export const uploadBootcampPhoto = asyncHandler(
         error: `Bootcamp with id ${id} not found`,
       });
     }
+
+    // Ensure that the user making this request is the owner of the bootcamp
+    bootcamp = await bootcampService.getBootcampById(id);
+
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: `Bootcamp can't be updated; No user is logged in`,
+      });
+    }
+    // 404: not found
+    if (!bootcamp) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+    // Admins are the only people aside from the bootcamp's owner that can make changes to a bootcamp
+    if (
+      bootcamp.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      // The user making this request is not owner of this bootcamp
+      return res.status(403).json({
+        success: false,
+        error: `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
+      });
+    }
+
+
+
 
     // a file was not uploaded
     if (files === undefined || files === null) {
@@ -528,7 +563,7 @@ export const uploadBootcampPhoto = asyncHandler(
       (process.env.FILE_UPLOAD_PATH as string) || "./public/uploads";
 
     // uplaod the file to the specified directory
-    file.mv(`${uploadFileDirectory}/${newFileName}`, async (err) => {
+    file.mv(`${uploadFileDirectory}/${newFileName}`, async (err: any) => {
       if (err) {
         return res.status(500).json({
           success: false,
