@@ -380,6 +380,7 @@ export const deleteCourse = asyncHandler(
       });
     }
 
+    console.log("deleteCourse (before adding req.user): req.body = ", req.body);
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
@@ -389,10 +390,8 @@ export const deleteCourse = asyncHandler(
       });
     }
 
-    // add logged in user's id to the body of the request
-    req.body.user = req.user.id;
-    // see what's in the body of the request
-    console.log("deleteCourse: req.body = ", req.body);
+
+    console.log("deleteCourse: req.user = ", req.user);
 
     // check if course exists; retrieve user id
     let courseToDelete = await courseService.getCourseById(id);
@@ -406,7 +405,7 @@ export const deleteCourse = asyncHandler(
       });
     }
 
-    // Only the owner of the course or an admin can add delete a course
+    // Only the owner of the course or an admin can delete a course
     if (
       courseToDelete.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
