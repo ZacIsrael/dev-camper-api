@@ -235,9 +235,30 @@ export const getBootcampsWithinARadius = asyncHandler(
 );
 
 export const addBootcamp = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
+    // add logged in user's id to the body of the request
+    req.body.user = req.user.id;
     // see what's in the body of the request
     console.log("addBootcamp: req.body = ", req.body);
+
+    // Check to see if the logged in user has already uploaded a bootcamp
+    const { bootcamps, pagination } =
+      await bootcampService.getFilteredBootcamps(
+        { user: req.user.id },
+        null,
+        null,
+        // no pagination necessary
+        { page: 1, limit: 0, skip: 0 }
+      );
+
+    // If the logged in user has already uploaded a bootcamp and they are NOT an admin,
+    // throw an error because if a user is NOT an admin, then they can only upload 1 bootcamp.
+    if (bootcamps.length > 0 && req.user.role !== "admin") {
+      return res.status(400).json({
+        success: false,
+        error: `User with id ${req.user.id} has already published a bootcamp`,
+      });
+    }
 
     // data transfer object (object that will contained the processed request)
     let dto: CreateBootcampDTO;
