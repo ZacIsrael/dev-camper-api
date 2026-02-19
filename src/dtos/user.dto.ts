@@ -25,7 +25,7 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export class CreateUserDTO {
   name: string;
   email: string;
-  role?: "user" | "publisher";
+  role?: "user" | "publisher" | "admin";
   password: string;
 
   // Constructor receives raw request body data
@@ -70,9 +70,13 @@ export class CreateUserDTO {
         );
       }
 
-      if (data.role !== "user" && data.role !== "publisher") {
+      if (
+        data.role !== "user" &&
+        data.role !== "publisher" &&
+        data.role !== "admin"
+      ) {
         throw new Error(
-          'Please add a valid role for the user: "user" or "publisher"'
+          'Please add a valid role for the user: "user", "admin", or "publisher"'
         );
       }
 

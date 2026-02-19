@@ -24,7 +24,7 @@ export interface UserType {
   _id: Types.ObjectId;
   name: string;
   email: string;
-  // enum: "user" or "publisher"
+  // enum: "user", "publisher", or "admin"
   role: string;
   password: string;
   resetPasswordToken: string;
