@@ -11,6 +11,7 @@ import { ErrorResponse } from "../utils/errorResponse.js";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import { geocoder } from "../utils/geocoder.js";
 import { Bootcamp } from "../models/bootcamp.model.js";
+import { userService } from "../services/user.service.js";
 
 /* ==== Implementation with middleware async handler ==== */
 export const getBootcamps = asyncHandler(
@@ -277,7 +278,7 @@ export const addBootcamp = asyncHandler(
 );
 
 export const updateBootcamp = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
     // obtain the bootcamp's id from the route parameter
     const { id } = req.params;
     const { body } = req;
@@ -287,6 +288,34 @@ export const updateBootcamp = asyncHandler(
       return res.status(400).json({
         success: false,
         error: `Invalid bootcamp id: ${id}`,
+      });
+    }
+
+    // Ensure that user making this request is the owner of the bootcamp
+    const bootcampToBeUpdated = await bootcampService.getBootcampById(id);
+
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: `Bootcamp can't be updated; No user is logged in`,
+      });
+    }
+    // 404: not found
+    if (!bootcampToBeUpdated) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+    // Admins are the only people aside from the bootcamp's owner that can make changes to a bootcamp
+    if (bootcampToBeUpdated.user !== req.user.id && req.user.role !== "admin") {
+      // The user making this request is not owner of this bootcamp
+      return res.status(401).json({
+        success: false,
+        error: `User with id ${bootcampToBeUpdated.user} can't update bootcamp with id ${id} because they are not the owner.`,
       });
     }
 
