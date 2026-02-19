@@ -291,8 +291,8 @@ export const updateBootcamp = asyncHandler(
       });
     }
 
-    // Ensure that user making this request is the owner of the bootcamp
-    const bootcampToBeUpdated = await bootcampService.getBootcampById(id);
+    // Ensure that the user making this request is the owner of the bootcamp
+    let bootcamp = await bootcampService.getBootcampById(id);
 
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
@@ -303,7 +303,7 @@ export const updateBootcamp = asyncHandler(
       });
     }
     // 404: not found
-    if (!bootcampToBeUpdated) {
+    if (!bootcamp) {
       // bootcamp with given id does not exist
       return res.status(404).json({
         success: false,
@@ -311,16 +311,19 @@ export const updateBootcamp = asyncHandler(
       });
     }
     // Admins are the only people aside from the bootcamp's owner that can make changes to a bootcamp
-    if (bootcampToBeUpdated.user !== req.user.id && req.user.role !== "admin") {
+    if (
+      bootcamp.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
       // The user making this request is not owner of this bootcamp
-      return res.status(401).json({
+      return res.status(403).json({
         success: false,
-        error: `User with id ${bootcampToBeUpdated.user} can't update bootcamp with id ${id} because they are not the owner.`,
+        error: `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
       });
     }
 
     // use service to update a bootcamp
-    const bootcamp = await bootcampService.updateBootcampById(id, body);
+    bootcamp = await bootcampService.updateBootcampById(id, body);
 
     // 404: not found
     if (!bootcamp) {
@@ -358,7 +361,7 @@ export const replaceBootcamp = async (
 };
 
 export const deleteBootcamp = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
     // obtain the bootcamp's id from the route parameter
     const { id } = req.params;
 
@@ -370,9 +373,41 @@ export const deleteBootcamp = asyncHandler(
       });
     }
 
-    // use service to delete a bootcamp
-    const deleted = bootcampService.deleteBootcampById(id);
+    // Ensure that the user making this request is the owner of the bootcamp
+    let deleted = await bootcampService.getBootcampById(id);
 
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: `Bootcamp can't be deleted; No user is logged in`,
+      });
+    }
+    // 404: not found
+    if (!deleted) {
+      // bootcamp with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Bootcamp with id ${id} not found`,
+      });
+    }
+    // Admins are the only people aside from the bootcamp's owner that can delete a bootcamp
+    if (
+      deleted.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      // The user making this request is not owner of this bootcamp
+      return res.status(403).json({
+        success: false,
+        error: `User with id ${req.user.id} can't delete bootcamp with id ${id} because they are not the owner.`,
+      });
+    }
+
+    // use service to delete a bootcamp
+    deleted = await bootcampService.deleteBootcampById(id);
+
+    // Redundant
     // 404: not found
     if (!deleted) {
       // bootcamp with given id does not exist
