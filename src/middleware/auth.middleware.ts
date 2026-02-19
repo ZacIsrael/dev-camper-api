@@ -85,3 +85,23 @@ export const protect = asyncHandler(
     }
   }
 );
+
+// Middleware to allow or deny access to certain routes depending on a user's role ("user" || "publisher" || "admin")
+// Higher-order middleware that restricts access based on user roles
+// Accepts a list of allowed roles and returns an Express middleware function
+export const authorize = (...roles: any) => {
+  return (req: any, res: Response, next: NextFunction) => {
+    // req.user is set by the protect middleware after JWT verification
+    // Check whether the authenticated user's role is included in allowed roles
+    if (!roles.includes(req.user.role)) {
+      // If user's role is not permitted, deny access with 403 Forbidden
+      return res.status(403).json({
+        success: false,
+        error: `User role ${req.user.role} is unauthorized to access this route`,
+      });
+    }
+
+    // User has an allowed role — proceed to the next middleware/handler
+    next();
+  };
+};
