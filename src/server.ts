@@ -5,6 +5,8 @@ import type { Application, Request, Response, NextFunction } from "express";
 // Used for styling messages that are logged to the console.
 import colors from "colors";
 
+import cookieParser from "cookie-parser";
+
 // Import dotenv to load environment variables from a file
 import dotenv from "dotenv";
 
@@ -60,6 +62,10 @@ if (process.env.NODE_ENV === "development") {
 
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
+
+// Middleware that parses cookies from incoming HTTP requests 
+// and makes them available on req.cookies
+app.use(cookieParser());
 
 // Read PORT from environment variables or fall back to 8000
 const PORT = Number(process.env.PORT) || 8000;
