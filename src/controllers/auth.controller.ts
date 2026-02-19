@@ -10,6 +10,8 @@ import { CreateUserDTO, LoginDTO } from "../dtos/user.dto.js";
 import { userService } from "../services/user.service.js";
 
 import { isNonEmptyString } from "../utils/helpers.js";
+import type { UserType } from "../types/user.interface.js";
+import type { UserDocument } from "../models/user.model.js";
 
 export const register = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +57,7 @@ export const login = asyncHandler(
     // check to see if the password matches
     const isMatch = await user.matchPassword(dto.password);
 
-    // password in the request does not match the password that is 
+    // password in the request does not match the password that is
     // stored with the user with the specified email
     if (!isMatch) {
       return res.status(401).json({
@@ -66,16 +68,58 @@ export const login = asyncHandler(
 
     // Ensure that the password is NOT returned to the client
     (user as any).password = undefined;
-
-    // user entered valid credential so generate token generate token
+    /*
+    // user entered valid credential so generate token
     const token = user.getSignedJwtToken();
 
-    // send response 
+    // send response
     return res.status(200).json({
       success: true,
       msg: "Login successful.",
       user,
-      token
+      token,
     });
+    */
+
+    sendTokenResponse(user, 200, res);
   }
 );
+
+// Retrieve token from model, create cookie and send response
+// Helper function to generate a JWT, set it in an HTTP-only cookie,
+// and send a standardized auth response back to the client
+const sendTokenResponse = (
+  user: UserDocument,
+  statusCode: number,
+  res: Response
+) => {
+  // Call the instance method on the user model to create a signed JWT
+  const token = user.getSignedJwtToken();
+
+  // Cookie configuration options 
+  const options: {
+    expires: Date;
+    httpOnly: boolean;
+    secure?: boolean;
+  } = {
+    // Set cookie expiration based on env variable (in days)
+    expires: new Date(
+      Date.now() +
+        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 1) * 24 * 60 * 60 * 1000
+    ),
+
+    // Prevent client-side JavaScript from accessing the cookie (mitigates XSS attacks)
+    httpOnly: true,
+  };
+
+  // Ensure cookies are only sent over HTTPS in production
+  if (process.env.NODE_ENV === "production") {
+    options.secure = true;
+  }
+
+  // Send response with JWT stored in cookie and included in JSON body
+  res.status(statusCode).cookie("token", token, options).json({
+    success: true,
+    token,
+  });
+};
