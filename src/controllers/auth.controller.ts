@@ -106,6 +106,19 @@ export const login = asyncHandler(
   }
 );
 
+// Get the currently authenticated user's profile
+export const getMe = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+   // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
+    const user = await userService.getUserById(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  }
+);
+
 // Retrieve token from model, create cookie and send response
 // Helper function to generate a JWT, set it in an HTTP-only cookie,
 // and send a standardized auth response back to the client
@@ -117,7 +130,7 @@ const sendTokenResponse = (
   // Call the instance method on the user model to create a signed JWT
   const token = user.getSignedJwtToken();
 
-  // Cookie configuration options 
+  // Cookie configuration options
   const options: {
     expires: Date;
     httpOnly: boolean;
