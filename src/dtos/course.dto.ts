@@ -20,11 +20,14 @@ Example Course structure:
   */
 
 import { isBoolean, isNonEmptyString, isNumber } from "../utils/helpers.js";
+import mongoose from "mongoose";
 
 // DTO representing the expected request body for creating a Course
 // Enforces the same constraints defined in the mongoose schema
 export class CreateCourseDTO {
   title: string;
+  // user that uploaded the bootcamp
+  user: mongoose.Types.ObjectId;
 
   description: string;
   weeks: number;
@@ -47,6 +50,18 @@ export class CreateCourseDTO {
     // Trim whitespace to prevent storing accidental leading/trailing spaces
     const title = data.title.trim();
     this.title = title;
+
+    if (!isNonEmptyString(data.user)) {
+      throw new Error("Please add a user id");
+    }
+
+    // Check that the data.user is in the proper format of a Mongoose id
+    if (!mongoose.Types.ObjectId.isValid(data.user)) {
+      throw new Error("Please add a valid user id");
+    }
+
+    // Assign validated user to DTO
+    this.user = data.user;
 
     if (!isNonEmptyString(data.description)) {
       throw new Error("Please add a description");

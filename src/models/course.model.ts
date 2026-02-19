@@ -42,6 +42,12 @@ const courseSchema = new Schema<CourseType>({
 
     maxLength: [250, "Description can't be longer than 250 characters"],
   },
+  // User that uploaded the Course
+  user: {
+    type: mongoose.Schema.ObjectId,
+    required: true,
+    ref: "User",
+  },
   weeks: {
     type: Number,
     required: [true, "Please enter a duration for the course (in # of weeks)"],

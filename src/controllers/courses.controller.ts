@@ -214,7 +214,21 @@ export const getCourseById = asyncHandler(
 
 // /api/v1/bootcamps/:bootcampId/courses route
 export const addCourse = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: `Bootcamp can't be updated; No user is logged in`,
+      });
+    }
+
+    // add logged in user's id to the body of the request
+    req.body.user = req.user.id;
+    // see what's in the body of the request
+    console.log("addCourse: req.body = ", req.body);
+
     const { bootcampId } = req.params;
 
     if (bootcampId === undefined) {
@@ -248,6 +262,17 @@ export const addCourse = asyncHandler(
       return res.status(404).json({
         success: false,
         error: `Bootcamp with id = ${bootcampId} not found`,
+      });
+    }
+
+    // Only the owner of the bootcamp or an admin can add a course to a bootcamp
+    if (
+      bootcamp.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `User with id ${req.user.id} is not authorized to add a course to bootcamp with id = ${bootcampId}`,
       });
     }
 

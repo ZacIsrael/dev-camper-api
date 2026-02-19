@@ -16,6 +16,7 @@ export const courseService = {
 
     const course = new Course({
       title: dto.title,
+      user: dto.user,
       description: dto.description,
       minimumSkill: dto.minimumSkill,
       tuition: dto.tuition,
@@ -74,7 +75,7 @@ export const courseService = {
     let courses = await query.populate({
       path: "bootcamp",
       // only display the following fields from the bootcamp document
-      select: 'name description'
+      select: "name description",
     });
 
     // Initialize pagination response object

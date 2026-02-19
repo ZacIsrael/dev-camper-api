@@ -28,7 +28,8 @@ export interface CourseType extends Document {
   // When creating a Course, _id doesn’t exist yet. But when reading or updating documents, it will.
   _id: mongoose.Types.ObjectId;
   title: string;
-
+  // id of user that uplaoded the course
+  user: mongoose.Types.ObjectId;
   description: string;
   weeks: number;
   tuition: number;
