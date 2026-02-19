@@ -220,7 +220,7 @@ export const addCourse = asyncHandler(
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        error: `Bootcamp can't be updated; No user is logged in`,
+        error: `Course can't be added; No user is logged in`,
       });
     }
 
@@ -295,10 +295,24 @@ export const addCourse = asyncHandler(
 );
 
 export const updateCourse = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
     // obtain the course's id from the route parameter
     const { id } = req.params;
     const { body } = req;
+
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: `Course can't be updated; No user is logged in`,
+      });
+    }
+
+    // add logged in user's id to the body of the request
+    req.body.user = req.user.id;
+    // see what's in the body of the request
+    console.log("updateCourse: req.body = ", req.body);
 
     // 400: invalid ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -308,9 +322,33 @@ export const updateCourse = asyncHandler(
       });
     }
 
-    // use service to update a course
-    const course = await courseService.updateCourseById(id, body);
+    // check if course exists; retrieve user id
+    let course = await courseService.getCourseById(id);
 
+    // 404: not found
+    if (!course) {
+      // course with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Course with id ${id} not found`,
+      });
+    }
+
+    // Only the owner of the bootcamp or an admin can add a course to a bootcamp
+    if (
+      course.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `User with id ${req.user.id} is not authorized to modify a course with id = ${id}`,
+      });
+    }
+
+    // use service to update a course
+    course = await courseService.updateCourseById(id, body);
+
+    // Redundant
     // 404: not found
     if (!course) {
       // bootcamp with given id does not exist
