@@ -334,7 +334,7 @@ export const updateCourse = asyncHandler(
       });
     }
 
-    // Only the owner of the bootcamp or an admin can add a course to a bootcamp
+    // Only the owner of the course or an admin can add modify a course
     if (
       course.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
@@ -368,7 +368,7 @@ export const updateCourse = asyncHandler(
 );
 
 export const deleteCourse = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction) => {
+  async (req: any, res: Response, next: NextFunction) => {
     // obtain the course's id from the route parameter
     const { id } = req.params;
 
@@ -380,11 +380,48 @@ export const deleteCourse = asyncHandler(
       });
     }
 
-    // use service to delete a course
-    const deleted = await courseService.deleteCourseById(id);
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: `Course with id = ${id} can't be deleted; No user is logged in`,
+      });
+    }
+
+    // add logged in user's id to the body of the request
+    req.body.user = req.user.id;
+    // see what's in the body of the request
+    console.log("deleteCourse: req.body = ", req.body);
+
+    // check if course exists; retrieve user id
+    let courseToDelete = await courseService.getCourseById(id);
 
     // 404: not found
-    if (!deleted) {
+    if (!courseToDelete) {
+      // course with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Course with id ${id} not found`,
+      });
+    }
+
+    // Only the owner of the course or an admin can add delete a course
+    if (
+      courseToDelete.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `User with id ${req.user.id} is not authorized to delete the course with id = ${id}`,
+      });
+    }
+
+    // use service to delete a course
+    courseToDelete = await courseService.deleteCourseById(id);
+
+    // 404: not found
+    if (!courseToDelete) {
       // course with given id does not exist
       return res.status(404).json({
         success: false,
@@ -396,7 +433,7 @@ export const deleteCourse = asyncHandler(
     res.status(204).json({
       success: true,
       msg: `Course with id = ${id} successfully deleted.`,
-      deleted,
+      deleted: courseToDelete,
     });
   }
 );
