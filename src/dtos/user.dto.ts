@@ -141,3 +141,52 @@ export class ForgotPasswordDTO {
     this.email = email;
   }
 }
+
+// DTO representing the expected request body for updating a user (admin's perspective)
+export class UpdateUserDTO {
+  email?: string;
+  name?: string;
+  password?: string;
+
+  constructor(data: any) {
+    if (
+      data.email === undefined &&
+      data.name === undefined &&
+      data.password === undefined
+    ) {
+      throw new Error(
+        "At least one of the following fields must be updated: name, email, password"
+      );
+    }
+    if (data.email !== undefined) {
+      if (!isNonEmptyString(data.email)) {
+        throw new Error("Email must be a non-empty string");
+      }
+
+      // Trim email
+      const email = data.email.trim();
+
+      // Enforce email regex from schema
+      if (!EMAIL_REGEX.test(email)) {
+        throw new Error("Please add a valid email");
+      }
+
+      // Assign validated email
+      this.email = email;
+    }
+
+    if (data.name !== undefined) {
+      if (!isNonEmptyString(data.name)) {
+        throw new Error("Please provide a name");
+      }
+      this.name = data.name;
+    }
+
+    if (data.password !== undefined) {
+      if (!isNonEmptyString(data.password)) {
+        throw new Error("Please provide a password");
+      }
+      this.password = data.password;
+    }
+  }
+}
