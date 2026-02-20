@@ -8,6 +8,7 @@ import {
   forgotPassword,
   resetPassword,
   updateDetails,
+  updatePassword,
 } from "../controllers/auth.controller.js";
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
@@ -31,5 +32,8 @@ router.patch("/resetpassword/:resettoken", resetPassword);
 
 // Executed when a user wants to update their name and/or email
 router.patch("/updatedetails", protect, updateDetails);
+
+// Executed when a user wants to update their password
+router.patch("/updatepassword", protect, updatePassword);
 
 export default router;
