@@ -180,6 +180,11 @@ export const userService = {
     return await query.exec();
   },
 
+  // Retrieves a user by id INCLUDING password (used for when a logged in user wants to change their password)
+  async getUserByIdWithPassword(id: string): Promise<UserDocument | null> {
+    return await User.findById(id).select("+password").exec();
+  },
+
   // Updates a user with a given id
   async updateUserById(id: string, body: object): Promise<UserType | null> {
     // Finds a user by ID and applies partial updates from the request body
