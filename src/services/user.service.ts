@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js";
 import type { UserDocument } from "../models/user.model.js";
 import type { UserType } from "../types/user.interface.js";
 import type { Pagination } from "../types/pagination.interface.js";
+import bcrypt from "bcryptjs";
 
 export const userService = {
   // dto parameter is of type CreateUserDTO (see user.dto.ts)
@@ -33,61 +34,47 @@ export const userService = {
   async getAllUsers(
     select: any,
     sortBy: any,
-    paginationObj: any
+    paginationObj?: { page?: number; limit?: number; skip?: number } | null
   ): Promise<{ users: UserType[]; pagination: Pagination }> {
-    // Build a separate query to calculate the total number of users
-    // This is used strictly for pagination metadata (next / prev)
-    let total = User.find();
+    // Defaults (no pagination unless caller provides limit/page)
+    const page = paginationObj?.page ?? 1;
+    // 0 => no limit (return all)
+    const limit = paginationObj?.limit ?? 0;
+    const skip = paginationObj?.skip ?? 0;
 
-    // Apply the same select/sort options to keep counts consistent with the main query
+    // Count query
+    let total = User.find();
     if (select) total.select(select);
     if (sortBy) total.sort(sortBy);
-
-    // Total number of users
     const totalCount = await total.countDocuments();
 
-    // Main query used to retrieve the actual user documents
+    // Main query
     let query = User.find();
-
-    // Apply field selection if provided
     if (select) query.select(select);
-
-    // Apply sorting if provided
     if (sortBy) query.sort(sortBy);
 
-    // Calculate the index of the last document on the current page
-    const endIndex = paginationObj.page * paginationObj.limit;
+    // Apply pagination only if limit > 0
+    if (limit > 0) {
+      query = query.skip(skip).limit(limit);
+    }
 
-    // paginationObj.skip is the same as the start index
-    if (paginationObj?.skip >= 0) query.skip(paginationObj.skip);
-    if (paginationObj?.limit > 0) query.limit(paginationObj.limit);
-
-    // Execute the query and retrieve users
     const users = await query;
 
-    // Initialize pagination response object
-    const resultPagination: Pagination = {
-      next: undefined,
-      prev: undefined,
-    };
+    const resultPagination: Pagination = { next: undefined, prev: undefined };
 
-    // Determine if a next page exists
-    if (endIndex < totalCount) {
-      resultPagination.next = {
-        page: paginationObj.page + 1,
-        limit: paginationObj.limit,
-      };
+    // Only compute pagination metadata if limit > 0
+    if (limit > 0) {
+      const endIndex = page * limit;
+
+      if (endIndex < totalCount) {
+        resultPagination.next = { page: page + 1, limit };
+      }
+
+      if (skip > 0) {
+        resultPagination.prev = { page: page - 1, limit };
+      }
     }
 
-    // Determine if a previous page exists
-    if (paginationObj.skip > 0) {
-      resultPagination.prev = {
-        page: paginationObj.page - 1,
-        limit: paginationObj.limit,
-      };
-    }
-
-    // Return user results along with pagination metadata
     return { users, pagination: resultPagination };
   },
 
@@ -249,5 +236,24 @@ export const userService = {
       { resetPasswordToken: undefined, resetPasswordExpire: undefined },
       { new: true, runValidators: true }
     );
+  },
+
+  // Admin-only: updates a user by id (allows password updates)
+  async adminUpdateUserById(
+    id: string,
+    body: Partial<UserType>
+  ): Promise<UserDocument | null> {
+    const updateData = { ...body };
+
+    // If password is being updated, hash it manually
+    if (updateData.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(updateData.password, salt);
+    }
+
+    return await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).exec();
   },
 };
