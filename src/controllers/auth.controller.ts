@@ -4,6 +4,8 @@ import type { Request, Response, NextFunction } from "express";
 
 import bcrypt from "bcryptjs";
 
+import crypto from "crypto";
+
 import { asyncHandler } from "../middleware/async.middleware.js";
 
 import {
@@ -187,6 +189,69 @@ export const forgotPassword = asyncHandler(
         error: "Email could not be sent",
       });
     }
+  }
+);
+
+// Put request for resetting a forgotten password
+export const resetPassword = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    // extract reset token from query parameters
+    const { resettoken } = req.params;
+
+    if (!resettoken) {
+      return res.status(400).json({
+        success: false,
+        error: "Bad Request: resettoken is not in query parameters",
+      });
+    }
+
+    // Get the hashed token
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resettoken)
+      .digest("hex");
+
+    // Retrieve the user using the resettoken
+    const user = await userService.getUserByValidResetToken(resetPasswordToken);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired token",
+      });
+    }
+
+    // check to see if a password was sent in the body of the request
+    if (!req.body.password) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter a new password",
+      });
+    }
+
+    const newPassword = req.body.password;
+
+    // middleware in user.model.ts will automatically encrypt the new password
+    const updatedUser = await userService.updatePasswordById(
+      user._id.toString(),
+      newPassword
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+    // Clear reset fields after successful password update (avoids null + avoids undefined params)
+    await userService.clearPasswordResetFields(user._id.toString());
+
+    sendTokenResponse(updatedUser, 200, res);
+
+    // res.status(200).json({
+    //   success: true,
+    //   data: user,
+    // });
   }
 );
 
