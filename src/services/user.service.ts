@@ -194,10 +194,33 @@ export const userService = {
     return user;
   },
 
+  async updatePasswordById(
+    id: string,
+    newPassword: string
+  ): Promise<UserDocument | null> {
+    const user = await User.findById(id).select("+password");
+    if (!user) return null;
+
+    user.password = newPassword;
+    // triggers pre("save") hashing
+    await user.save();
+    return user;
+  },
+
   // Deletes a user with a given id
   async deleteUserById(id: string): Promise<UserType | null> {
     // Returns the deleted user or null if it never existed
     return await User.findByIdAndDelete(id);
+  },
+
+  // Retrieves a user by reset token (hashed) + ensures not expired
+  async getUserByValidResetToken(
+    resetPasswordToken: string
+  ): Promise<UserDocument | null> {
+    return await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: new Date() },
+    }).exec();
   },
 
   // Sets password reset fields for a user (forgot password flow support)
