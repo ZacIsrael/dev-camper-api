@@ -167,6 +167,71 @@ export const updateDetails = asyncHandler(
   }
 );
 
+// Patch request to update a logged in user's password
+export const updatePassword = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    if (!req.user.id) {
+      return res.status(401).json({
+        success: false,
+        error: "User fields can't be updated; No user is logged in",
+      });
+    }
+
+    if (!req.body.currentPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter your current password",
+      });
+    }
+
+    if (!req.body.newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Add a new password",
+      });
+    }
+
+    // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
+    const user = await userService.getUserByIdWithPassword(req.user.id);
+
+    if (user === null) {
+      return res.status(404).json({
+        success: false,
+        error: `User with id = ${req.user.id} not found`,
+      });
+    }
+
+    // check if the (hashed) current password from the request body matches the (hashed) password in the database
+    // if they don't match, then the password will not be updated
+
+    if (!(await user.matchPassword(req.body.currentPassword))) {
+      return res.status(401).json({
+        success: false,
+        error: "Password is incorrect",
+      });
+    }
+
+    const updatedUser = await userService.updatePasswordById(
+      user._id.toString(),
+      req.body.newPassword
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    sendTokenResponse(updatedUser, 200, res);
+
+    // res.status(200).json({
+    //   success: true,
+    //   data: updatedUser,
+    // });
+  }
+);
+
 // function that allows a user to creat a new password
 export const forgotPassword = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
