@@ -25,6 +25,7 @@ import path from "node:path";
 
 // Import helper to convert module URL to file path (ESM-compatible)
 import { fileURLToPath } from "node:url";
+import { sendEmail } from "../utils/sendEmail.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -130,7 +131,6 @@ export const forgotPassword = asyncHandler(
 
     const user = await userService.getUserByEmail(dto.email, false);
 
-    // no user with that email exists
     if (user === null) {
       return res.status(404).json({
         success: false,
@@ -138,18 +138,55 @@ export const forgotPassword = asyncHandler(
       });
     }
 
-    // Get reset token
+    // Generate reset token (plain token returned; hashed token + expiry set on user doc)
     const resetToken = user.getResetPasswordToken();
 
-    console.log('forgotPassword(): resetToken = ', resetToken);
+    // Persist hashed token + expiry using your service (NOT undefined)
+    await userService.setPasswordResetFields(
+      user._id.toString(),
+      // set by getResetPasswordToken()
+      user.resetPasswordToken!,
+      // set by getResetPasswordToken()
+      user.resetPasswordExpire!
+    );
 
-    // await userService.setPasswordResetFields(user._id.toString(), resetToken, new Date(Date.now() + 10 * 60 * 1000))
+    if (!req.protocol) {
+      return res.status(400).json({
+        success: false,
+        error: `The request protocol does not exist`,
+      });
+    }
 
-    res.status(200).json({
-      success: true,
-      data: user,
-      resetToken
-    });
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/auth/resetpassword/${resetToken}`;
+
+    const message =
+      `You are receiving this email because you (or someone else) has requested a password reset.\n\n` +
+      `Please make a PUT request to:\n\n${resetUrl}`;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Password reset token",
+        message,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: "Email sent",
+      });
+    } catch (err: any) {
+      console.log(err);
+
+      // Clear reset fields via user service (avoids null + avoids undefined params)
+      await userService.clearPasswordResetFields(user._id.toString());
+
+      return res.status(500).json({
+        success: false,
+        error: "Email could not be sent",
+      });
+    }
   }
 );
 
