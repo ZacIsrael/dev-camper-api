@@ -126,6 +126,47 @@ export const getMe = asyncHandler(
   }
 );
 
+// Patch request for updating a user's name & email
+export const updateDetails = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    // Makes no sense to call this function if neither the user's name or email is getting updated
+    if (!req.body.name && !req.body.email) {
+      return res.status(400).json({
+        success: false,
+        error: "Must add a name, email, or both to be updated",
+      });
+    }
+
+    // Build update object dynamically
+    const fieldsToUpdate: { name?: string; email?: string } = {};
+
+    // if a name is in the body, update it
+    if (req.body.name) fieldsToUpdate.name = req.body.name;
+    // if an email is in the body, update it
+    if (req.body.email) fieldsToUpdate.email = req.body.email;
+
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: "User fields can't be updated; No user is logged in",
+      });
+    }
+    // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
+    const user = await userService.updateUserById(req.user.id, fieldsToUpdate);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  }
+);
+
 // function that allows a user to creat a new password
 export const forgotPassword = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
@@ -165,7 +206,7 @@ export const forgotPassword = asyncHandler(
 
     const message =
       `You are receiving this email because you (or someone else) has requested a password reset.\n\n` +
-      `Please make a PUT request to:\n\n${resetUrl}`;
+      `Please make a PATCH request to:\n\n${resetUrl}`;
 
     try {
       await sendEmail({
@@ -192,7 +233,7 @@ export const forgotPassword = asyncHandler(
   }
 );
 
-// Put request for resetting a forgotten password
+// Patch request for resetting a forgotten password
 export const resetPassword = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     // extract reset token from query parameters
