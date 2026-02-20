@@ -5,7 +5,8 @@ import {
   register,
   login,
   getMe,
-  forgotPassword
+  forgotPassword,
+  resetPassword
 } from "../controllers/auth.controller.js";
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
@@ -23,5 +24,8 @@ router.get("/me", protect, getMe);
 
 // Executed when a user click "Forgot password" on the frontend
 router.post("/forgotpassword", forgotPassword);
+
+// Executed when a user resets their password
+router.put("/resetpassword/:resettoken", resetPassword);
 
 export default router;
