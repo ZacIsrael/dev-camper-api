@@ -34,6 +34,7 @@ import { connectToMongoDB } from "./config/db.js";
 import bootcampsRouter from "./routes/bootcamps.route.js";
 import coursesRouter from "./routes/courses.route.js";
 import authRouter from "./routes/auth.route.js";
+import usesrRouter from "./routes/users.route.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -63,7 +64,7 @@ if (process.env.NODE_ENV === "development") {
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
 
-// Middleware that parses cookies from incoming HTTP requests 
+// Middleware that parses cookies from incoming HTTP requests
 // and makes them available on req.cookies
 app.use(cookieParser());
 
@@ -81,11 +82,11 @@ app.use(fileUpload());
 // from the root-level 'public' directory
 app.use(express.static(path.join(__dirname, "../public")));
 
-
 // mount the routes
 app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
 app.use(`/api/v${API_VERSION}/courses`, coursesRouter);
 app.use(`/api/v${API_VERSION}/auth`, authRouter);
+app.use(`/api/v${API_VERSION}/users`, usesrRouter);
 
 // use custom error handler middleware
 app.use(errorHandler);
