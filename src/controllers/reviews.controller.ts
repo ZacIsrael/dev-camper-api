@@ -179,6 +179,37 @@ export const getReviews = asyncHandler(
   }
 );
 
+// /api/v1/reviews/:id route
+export const getReviewById = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    const { id } = req.params;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid review id: ${id}`,
+      });
+    }
+
+    // retrieve the review
+    const review = await reviewService.getReviewById(id);
+
+    if (review === null) {
+      return res.status(404).json({
+        success: false,
+        error: `Review with id = ${id} not found`,
+      });
+    }
+
+    // return review to the client
+    res.status(200).json({
+      success: true,
+      review,
+    });
+  }
+);
+
 // /api/v1/bootcamps/:bootcampId/reviews route
 export const addReview = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
