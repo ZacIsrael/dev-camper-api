@@ -25,18 +25,17 @@ const reviewSchema = new Schema<ReviewType>({
   title: {
     type: String,
     required: [true, "Please add a title for this review"],
-    maxLength: 100
+    maxLength: 100,
   },
   text: {
     type: String,
     required: [true, "Please add text for the body of this review"],
-
   },
   rating: {
     type: Number,
     required: [true, "Please give this review a rating (1-10)"],
     min: 1,
-    max: 10
+    max: 10,
   },
   bootcamp: {
     type: mongoose.Schema.ObjectId,
@@ -50,4 +49,6 @@ const reviewSchema = new Schema<ReviewType>({
   },
 });
 
+// Create a compound unique index to ensure a user can only submit one review per bootcamp
+reviewSchema.index({ bootcamp: 1, user: 1 }, { unique: true });
 export const Review = model<ReviewType>("Review", reviewSchema);
