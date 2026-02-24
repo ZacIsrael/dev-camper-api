@@ -25,14 +25,18 @@ const reviewSchema = new Schema<ReviewType>({
   title: {
     type: String,
     required: [true, "Please add a title for this review"],
+    maxLength: 100
   },
   text: {
     type: String,
     required: [true, "Please add text for the body of this review"],
+
   },
   rating: {
     type: Number,
     required: [true, "Please give this review a rating (1-10)"],
+    min: 1,
+    max: 10
   },
   bootcmap: {
     type: mongoose.Schema.ObjectId,
