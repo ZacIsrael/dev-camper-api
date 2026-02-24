@@ -359,3 +359,68 @@ export const updateReview = asyncHandler(
     });
   }
 );
+
+// delete review
+export const deleteReview = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    // reusable review variable
+    let reviewToBeDeleted;
+    // Safe guard incase of accidental deletion of user when testing;
+    // This will almost never happen in production
+    if (!req.user.id) {
+      return res.status(401).json({
+        success: false,
+        // No user appears to be logged in
+        error: "Authentication required",
+      });
+    }
+    console.log("req.user = ", req.user);
+    if (!req.params.id) {
+      return res.status(400).json({
+        success: false,
+        error: "Add review id to query parameters",
+      });
+    }
+
+    const { id } = req.params;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid review id: ${id}`,
+      });
+    }
+
+    // check to see if the review actually exists
+    reviewToBeDeleted = await reviewService.getReviewById(id);
+
+    if (reviewToBeDeleted === null) {
+      return res.status(404).json({
+        success: false,
+        error: `Review with id = ${id} not found`,
+      });
+    }
+
+    // Only the user that wrote the review or an admin can delete a review
+    if (
+      reviewToBeDeleted.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `User with id ${req.user.id} is not authorized to delete the review with id = ${id}`,
+      });
+    }
+
+    // delete the review
+    reviewToBeDeleted = await reviewService.deleteReviewById(id);
+
+    // send response
+    return res.status(204).json({
+      success: true,
+      msg: `Review with id = ${id} successfully deleted.`,
+      reviewToBeDeleted,
+    });
+  }
+);
