@@ -9,6 +9,7 @@ import {
   resetPassword,
   updateDetails,
   updatePassword,
+  logout,
 } from "../controllers/auth.controller.js";
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
@@ -20,6 +21,9 @@ const router = express.Router();
 router.post("/register", register);
 // User can login
 router.post("/login", login);
+
+// log a user out
+router.post("/logout", logout);
 
 // Retrieves the user that's currently logged in
 router.get("/me", protect, getMe);
