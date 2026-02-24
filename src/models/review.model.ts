@@ -5,6 +5,11 @@ import mongoose, {
   model,
   type HydratedDocument,
 } from "mongoose";
+
+// Adds TypeScript awareness for custom static methods on the Course model
+interface ReviewModel extends mongoose.Model<ReviewType> {
+  getAverageRating(bootcampId: mongoose.Types.ObjectId): Promise<void>;
+}
 /*
 
     Example Review structure:
@@ -51,4 +56,83 @@ const reviewSchema = new Schema<ReviewType>({
 
 // Create a compound unique index to ensure a user can only submit one review per bootcamp
 reviewSchema.index({ bootcamp: 1, user: 1 }, { unique: true });
-export const Review = model<ReviewType>("Review", reviewSchema);
+
+// Static method to calculate the average course tuition for a given bootcamp
+reviewSchema.statics.getAverageRating = async function (
+  bootcampId: mongoose.Types.ObjectId
+): Promise<void> {
+  // Log whenever this static method is invoked
+  console.log(
+    "Review model: getAverageRating() called: bootcampId = ",
+    bootcampId
+  );
+
+  // Run a MongoDB aggregation pipeline on the Review collection
+  const obj = await this.aggregate<{
+    _id: mongoose.Types.ObjectId;
+    averageRating: number;
+  }>([
+    {
+      // Match only reviews that belong to the provided bootcamp ID
+      $match: { bootcamp: bootcampId },
+    },
+    {
+      // Group all matched reviews by bootcamp ID
+      $group: {
+        _id: "$bootcamp",
+        // Calculate the average value of the rating field
+        averageRating: { $avg: "$rating" },
+      },
+    },
+  ]);
+
+  // Log the aggregation result for debugging and verification
+  console.log("Review model: getAverageRating() called: obj = ", obj);
+
+  try {
+    // Get the Bootcamp model from Mongoose's model registry
+    // This avoids relying on 'this.model()', which TS may not recognize here
+    const Bootcamp = mongoose.model("Bootcamp");
+
+    // If no courses remain, clear/reset averageRating on the bootcamp
+    if (!obj.length) {
+      await Bootcamp.findByIdAndUpdate(bootcampId, {
+        averageRating: undefined,
+      });
+      return;
+    }
+
+    // Round the average up to the nearest 10 (ex: 8734 -> 8740)
+    const roundedAvg = Math.ceil(obj[0].averageRating / 10) * 10;
+
+    // Literal average
+    const avg = obj[0].averageRating;
+
+    // Update the bootcamp's stored averageRating field
+    await Bootcamp.findByIdAndUpdate(bootcampId, {
+      averageRating: avg,
+    });
+  } catch (err: any) {
+    console.log("Review model: getAverageRating() called: err =", err);
+  }
+};
+
+// Generate average rating (getAverageRating()) after a review has been saved
+reviewSchema.post("save", async function (this: ReviewType) {
+  // `this` is the saved Course DOCUMENT instance
+  // The document has a `bootcamp` ObjectId that tells us which bootcamp it belongs to
+  const bootcampId = this.bootcamp;
+
+  // Call the static method directly on the Review MODEL
+  // This avoids using `this.constructor`, which TypeScript types as just `Function`
+  await Review.getAverageRating(bootcampId);
+});
+
+// Re-calculate average cost AFTER a review has been removed
+// Query middleware that runs AFTER 'findOneAndDelete()' / 'findByIdAndDelete()'
+reviewSchema.post("findOneAndDelete", async function (doc) {
+  if (!doc?.bootcamp) return;
+
+  await Review.getAverageRating(doc.bootcamp);
+});
+export const Review = model<ReviewType, ReviewModel>("Review", reviewSchema);
