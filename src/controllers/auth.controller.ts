@@ -67,6 +67,7 @@ export const register = asyncHandler(
   }
 );
 
+// log a user in
 export const login = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const dto = new LoginDTO(req.body);
@@ -110,6 +111,25 @@ export const login = asyncHandler(
     */
 
     sendTokenResponse(user, 200, res);
+  }
+);
+
+// Logs the user out by clearing the auth cookie
+export const logout = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    // Overwrite the existing JWT cookie with a dummy value
+    // and set a very short expiration so the browser removes it
+    res.cookie("token", "none", {
+      // expire in 10 seconds
+      expires: new Date(Date.now() + 10 * 1000),
+      // prevents client-side JS from accessing the cookie
+      httpOnly: true,
+    });
+
+    // Send success response to confirm logout
+    res.status(200).json({
+      success: true,
+    });
   }
 );
 
