@@ -35,6 +35,7 @@ import bootcampsRouter from "./routes/bootcamps.route.js";
 import coursesRouter from "./routes/courses.route.js";
 import authRouter from "./routes/auth.route.js";
 import usesrRouter from "./routes/users.route.js";
+import reviewsRouter from "./routes/reviews.route.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -87,6 +88,7 @@ app.use(`/api/v${API_VERSION}/bootcamps`, bootcampsRouter);
 app.use(`/api/v${API_VERSION}/courses`, coursesRouter);
 app.use(`/api/v${API_VERSION}/auth`, authRouter);
 app.use(`/api/v${API_VERSION}/users`, usesrRouter);
+app.use(`/api/v${API_VERSION}/reviews`, reviewsRouter);
 
 // use custom error handler middleware
 app.use(errorHandler);
