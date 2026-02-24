@@ -126,7 +126,7 @@ courseSchema.statics.getAverageCost = async function (
     // If no courses remain, clear/reset averageCost on the bootcamp
     if (!obj.length) {
       await Bootcamp.findByIdAndUpdate(bootcampId, {
-        averageCost: undefined, // or 0 if you prefer
+        averageCost: undefined,
       });
       return;
     }
