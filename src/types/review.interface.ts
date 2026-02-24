@@ -30,7 +30,7 @@ export interface ReviewType {
   // rating of the review (1 - 10)
   rating: number;
   // id of the bootcamp that this review is about
-  bootcmap: Types.ObjectId;
+  bootcamp: Types.ObjectId;
   // id of the user that left this review
   user: Types.ObjectId;
 }

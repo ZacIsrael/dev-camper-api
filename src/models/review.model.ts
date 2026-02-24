@@ -38,7 +38,7 @@ const reviewSchema = new Schema<ReviewType>({
     min: 1,
     max: 10
   },
-  bootcmap: {
+  bootcamp: {
     type: mongoose.Schema.ObjectId,
     required: true,
     ref: "Bootcamp",
