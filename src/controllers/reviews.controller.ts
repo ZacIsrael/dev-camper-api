@@ -263,6 +263,13 @@ export const addReview = asyncHandler(
       });
     }
 
+    if (bootcamp.user.toString() === req.user.id) {
+      return res.status(403).json({
+        success: false,
+        error: `Bootcamp owner can't write a review for their own bootcamp.`,
+      });
+    }
+
     // data transfer object (object that will contain the processed request)
     let dto: any;
 
