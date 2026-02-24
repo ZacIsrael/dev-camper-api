@@ -4,7 +4,7 @@ import { isNonEmptyString } from "../utils/helpers.js";
 import mongoose from "mongoose";
 import { reviewService } from "../services/review.service.js";
 import { bootcampService } from "../services/bootcamp.service.js";
-import { CreateReviewDTO } from "../dtos/review.dto.js";
+import { CreateReviewDTO, UpdateReviewDTO } from "../dtos/review.dto.js";
 
 // GET /api/v1/bootcamps/:bootcampId/reviews route
 // GET /api/v1/reviews route
@@ -242,10 +242,89 @@ export const addReview = asyncHandler(
     console.log("addReview: dto = ", dto);
 
     // use service to add review
-    const course = await reviewService.createReview(dto);
+    const review = await reviewService.createReview(dto);
     // send response to route
     res
       .status(201)
-      .json({ success: true, msg: "Review successfully added.", course });
+      .json({ success: true, msg: "Review successfully added.", review });
+  }
+);
+
+// /api/v1/reviews/:id route
+export const updateReview = asyncHandler(
+  async (req: any, res: Response, next: NextFunction) => {
+    // Might be unnecessary because of middleware that protects routes
+    // but you can never be too careful
+    if (!req.user.id) {
+      return res.status(401).json({
+        success: false,
+        error: `Review can't be updated; No user is logged in`,
+      });
+    }
+
+    // add logged in user's id to the body of the request
+    req.body.user = req.user.id;
+    // see what's in the body of the request
+    console.log("updateReview: req.body = ", req.body);
+
+    // review id
+    const { id } = req.params;
+    // destructure body of the request
+    const { body } = req;
+
+    // 400: invalid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid review id: ${id}`,
+      });
+    }
+
+    // check if review exists
+    let review = await reviewService.getReviewById(id);
+
+    // 404: not found
+    if (!review) {
+      // review with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Review with id ${id} not found`,
+      });
+    }
+
+    // Only the user that wrote the review or an admin can add/modify a review
+    if (
+      review.user.toString() !== req.user.id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `User with id ${req.user.id} is not authorized to modify the review with id = ${id}`,
+      });
+    }
+
+    // sanitize the body of the update request
+    let dto: UpdateReviewDTO;
+    dto = new UpdateReviewDTO(req.body);
+
+    // use service to update the review
+    review = await reviewService.updateReviewById(id, dto);
+
+    // Redundant
+    // 404: not found
+    if (!review) {
+      // review with given id does not exist
+      return res.status(404).json({
+        success: false,
+        error: `Review with id ${id} not found`,
+      });
+    }
+
+    // send response to route
+    res.status(200).json({
+      success: true,
+      msg: `Review with id = ${id} successfully modified.`,
+      review,
+    });
   }
 );
