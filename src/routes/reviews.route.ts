@@ -5,6 +5,7 @@ import {
   getReviews,
   addReview,
   updateReview,
+  getReviewById,
 } from "../controllers/reviews.controller.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
@@ -15,7 +16,7 @@ const router = express.Router();
 router.get("/", getReviews);
 
 // Get review by id
-// router.get("/:id", getReviewById);
+router.get("/:id", getReviewById);
 
 // Update a review
 router.patch("/:id", protect, updateReview);
