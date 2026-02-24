@@ -2,6 +2,8 @@
 import express from "express";
 import type { Application, Request, Response, NextFunction } from "express";
 
+import mongoSanitize from "express-mongo-sanitize";
+
 // Used for styling messages that are logged to the console.
 import colors from "colors";
 
@@ -68,6 +70,9 @@ app.use(express.json());
 // Middleware that parses cookies from incoming HTTP requests
 // and makes them available on req.cookies
 app.use(cookieParser());
+
+// Sanitize request data to prevent NoSQL operator injection
+app.use(mongoSanitize());
 
 // Read PORT from environment variables or fall back to 8000
 const PORT = Number(process.env.PORT) || 8000;
