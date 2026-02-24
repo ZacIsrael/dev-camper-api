@@ -14,6 +14,7 @@ import {
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
+import { addReview, getReviews } from "../controllers/reviews.controller.js";
 
 const router = express.Router();
 
@@ -29,6 +30,9 @@ router.get("/radius/:zipcode/:distance", getBootcampsWithinARadius);
 // Get all courses that belong to a certain bootcamp
 router.get("/:bootcampId/courses", getCourses);
 
+// Get all reviews that belong to a certain bootcamp
+router.get("/:bootcampId/reviews", getReviews);
+
 // add a course to a certain bootcamp
 router.post(
   "/:bootcampId/courses",
@@ -37,6 +41,8 @@ router.post(
   addCourse
 );
 
+// add a review to a certain bootcamp
+router.post("/:bootcampId/reviews", protect, addReview);
 // Add a bootcamp
 router.post("/", protect, authorize("publisher", "admin"), addBootcamp);
 
