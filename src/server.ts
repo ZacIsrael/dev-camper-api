@@ -2,6 +2,7 @@
 import express from "express";
 import type { Application, Request, Response, NextFunction } from "express";
 
+import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
 
 // Used for styling messages that are logged to the console.
@@ -61,6 +62,9 @@ if (process.env.NODE_ENV === "development") {
   // development logging middleware
   app.use(morgan("dev"));
 }
+
+// Set secure HTTP headers
+app.use(helmet());
 
 // app.use(logger);
 
