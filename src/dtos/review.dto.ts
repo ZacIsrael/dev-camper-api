@@ -37,6 +37,10 @@ export class CreateReviewDTO {
 
     // Trim whitespace to prevent storing accidental leading/trailing spaces
     const title = data.title.trim();
+
+    if (title.length > 100) {
+      throw new Error("Title must be 100 characters or less.");
+    }
     this.title = title;
 
     if (!isNonEmptyString(data.text)) {
@@ -48,6 +52,10 @@ export class CreateReviewDTO {
     this.text = text;
 
     if (!isNumber(data.rating)) {
+      throw new Error("Please give this bootcamp a valid rating (1-10)");
+    }
+
+    if (data.rating > 10 || data.rating < 1) {
       throw new Error("Please give this bootcamp a valid rating (1-10)");
     }
     this.rating = data.rating;
