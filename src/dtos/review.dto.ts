@@ -27,8 +27,10 @@ export class CreateReviewDTO {
   rating: number;
   // user that uploaded the review
   user: mongoose.Types.ObjectId;
+  // bootcamp will be passed in via the request's parameters
+  // controller will handle its validation
   // bootcamp that this review belongs
-  bootcamp: mongoose.Types.ObjectId;
+  // bootcamp: mongoose.Types.ObjectId;
 
   constructor(data: Partial<CreateReviewDTO>) {
     if (!isNonEmptyString(data.title)) {
@@ -72,16 +74,18 @@ export class CreateReviewDTO {
     // Assign validated user to DTO
     this.user = data.user;
 
-    if (!isNonEmptyString(data.bootcamp)) {
-      throw new Error("Please add a bootcamp id");
-    }
+    // bootcamp will be passed in via the request's parameters
+    // controller will handle its validation
+    // if (!isNonEmptyString(data.bootcamp)) {
+    //   throw new Error("Please add a bootcamp id");
+    // }
 
-    // Check that the data.bootcamp is in the proper format of a Mongoose id
-    if (!mongoose.Types.ObjectId.isValid(data.user)) {
-      throw new Error("Please add a valid bootcamp id");
-    }
+    // // Check that the data.bootcamp is in the proper format of a Mongoose id
+    // if (!mongoose.Types.ObjectId.isValid(data.user)) {
+    //   throw new Error("Please add a valid bootcamp id");
+    // }
 
-    // Assign validated bootcamp to DTO
-    this.bootcamp = data.bootcamp;
+    // // Assign validated bootcamp to DTO
+    // this.bootcamp = data.bootcamp;
   }
 }
