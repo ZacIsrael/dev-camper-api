@@ -72,7 +72,12 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Sanitize request data to prevent NoSQL operator injection
-app.use(mongoSanitize());
+app.use((req, res, next) => {
+  mongoSanitize.sanitize(req.body);
+  mongoSanitize.sanitize(req.query);
+  mongoSanitize.sanitize(req.params);
+  next();
+});
 
 // Read PORT from environment variables or fall back to 8000
 const PORT = Number(process.env.PORT) || 8000;
