@@ -1,7 +1,11 @@
 // Import the Express framework for building HTTP servers
 import express from "express";
 
-import { getReviews, addReview } from "../controllers/reviews.controller.js";
+import {
+  getReviews,
+  addReview,
+  updateReview,
+} from "../controllers/reviews.controller.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
 
@@ -14,7 +18,7 @@ router.get("/", getReviews);
 // router.get("/:id", getReviewById);
 
 // Update a review
-// router.patch("/:id", protect, updateReview);
+router.patch("/:id", protect, updateReview);
 
 // Delete a review (only the user the wrote the rview or an admin should be able to delete it)
 // router.delete("/:id", protect, deleteReview);
