@@ -6,6 +6,7 @@ import {
   addReview,
   updateReview,
   getReviewById,
+  deleteReview,
 } from "../controllers/reviews.controller.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
@@ -21,7 +22,7 @@ router.get("/:id", getReviewById);
 // Update a review
 router.patch("/:id", protect, updateReview);
 
-// Delete a review (only the user the wrote the rview or an admin should be able to delete it)
-// router.delete("/:id", protect, deleteReview);
+// Delete a review (only the user that wrote the review or an admin should be able to delete it)
+router.delete("/:id", protect, deleteReview);
 
 export default router;
