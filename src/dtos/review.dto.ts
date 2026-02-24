@@ -89,3 +89,56 @@ export class CreateReviewDTO {
     // this.bootcamp = data.bootcamp;
   }
 }
+
+// DTO representing the expected request body for updating a review
+export class UpdateReviewDTO {
+  title?: string;
+  text?: string;
+  rating?: number;
+
+  constructor(data: any) {
+    if (
+      data.title === undefined &&
+      data.text === undefined &&
+      data.rating === undefined
+    ) {
+      throw new Error(
+        "At least one of the following fields must be updated: title, text, rating"
+      );
+    }
+    if (data.title !== undefined) {
+      if (!isNonEmptyString(data.title)) {
+        throw new Error("Please add a title");
+      }
+
+      // Trim whitespace to prevent storing accidental leading/trailing spaces
+      const title = data.title.trim();
+
+      if (title.length > 100) {
+        throw new Error("Title must be 100 characters or less.");
+      }
+      this.title = title;
+    }
+
+    if (data.text !== undefined) {
+      if (!isNonEmptyString(data.text)) {
+        throw new Error("Please add a review");
+      }
+
+      // Trim whitespace to prevent storing accidental leading/trailing spaces
+      const text = data.text.trim();
+      this.text = text;
+    }
+
+    if (data.rating !== undefined) {
+      if (!isNumber(data.rating)) {
+        throw new Error("Please give this bootcamp a valid rating (1-10)");
+      }
+
+      if (data.rating > 10 || data.rating < 1) {
+        throw new Error("Please give this bootcamp a valid rating (1-10)");
+      }
+      this.rating = data.rating;
+    }
+  }
+}
