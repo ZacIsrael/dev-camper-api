@@ -5,6 +5,7 @@ import type { Application, Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
+import hpp from "hpp";
 
 // Used for styling messages that are logged to the console.
 import colors from "colors";
@@ -73,8 +74,6 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-
-
 // Set secure HTTP headers
 app.use(helmet());
 
@@ -97,6 +96,9 @@ app.use((req, res, next) => {
   mongoSanitize.sanitize(req.params);
   next();
 });
+
+// Prevent HTTP Parameter Pollution
+app.use(hpp());
 
 // Read PORT from environment variables or fall back to 8000
 const PORT = Number(process.env.PORT) || 8000;
