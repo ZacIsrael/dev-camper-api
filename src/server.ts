@@ -4,6 +4,7 @@ import type { Application, Request, Response, NextFunction } from "express";
 
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
+import rateLimit from "express-rate-limit";
 
 // Used for styling messages that are logged to the console.
 import colors from "colors";
@@ -58,15 +59,29 @@ connectToMongoDB();
 // Create an Express application instance
 const app: Application = express();
 
+// Limit each IP to 100 requests per 15 minutes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  // return rate limit info in headers
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 if (process.env.NODE_ENV === "development") {
   // development logging middleware
   app.use(morgan("dev"));
 }
 
+
+
 // Set secure HTTP headers
 app.use(helmet());
 
 // app.use(logger);
+
+// Apply rate limiting to all requests
+app.use(limiter);
 
 // Enable JSON body parsing for incoming requests
 app.use(express.json());
