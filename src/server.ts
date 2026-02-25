@@ -6,6 +6,7 @@ import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
+import cors from "cors";
 
 // Used for styling messages that are logged to the console.
 import colors from "colors";
@@ -76,6 +77,29 @@ if (process.env.NODE_ENV === "development") {
 
 // Set secure HTTP headers
 app.use(helmet());
+
+// Enable Cross-Origin Resource Sharing (CORS)
+// Allows frontend apps from different origins to
+// communicate with this API
+app.use(cors());
+/*
+ 
+// If I had a frontend app to connect to this api, 
+// this is how it would be done:
+
+// Specifies which client origins are allowed to send requests 
+// to this API and enables cookies / auth headers to be included 
+// in cross-origin requests.
+*/
+
+// app.use(
+//   cors({
+//     // frontend app URL(s)
+//     origin: ["http://localhost:3000"],
+//     // allow cookies and Authorization headers
+//     credentials: true,
+//   })
+// );
 
 // app.use(logger);
 
