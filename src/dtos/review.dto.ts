@@ -16,7 +16,12 @@
 
 */
 
-import { isBoolean, isNonEmptyString, isNumber } from "../utils/helpers.js";
+import {
+  isBoolean,
+  isNonEmptyString,
+  isNumber,
+  sanitizePlainText,
+} from "../utils/helpers.js";
 import mongoose from "mongoose";
 
 // DTO representing the expected request body for creating a Course
@@ -38,7 +43,10 @@ export class CreateReviewDTO {
     }
 
     // Trim whitespace to prevent storing accidental leading/trailing spaces
-    const title = data.title.trim();
+    // const title = data.title.trim();
+
+    // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
+    const title = sanitizePlainText(data.title);
 
     if (title.length > 100) {
       throw new Error("Title must be 100 characters or less.");
@@ -50,7 +58,10 @@ export class CreateReviewDTO {
     }
 
     // Trim whitespace to prevent storing accidental leading/trailing spaces
-    const text = data.text.trim();
+    // const text = data.text.trim();
+
+    // Sanitize user-provided text input to strip malicious HTML/JS (XSS prevention)
+    const text = sanitizePlainText(data.text);
     this.text = text;
 
     if (!isNumber(data.rating)) {
@@ -112,7 +123,10 @@ export class UpdateReviewDTO {
       }
 
       // Trim whitespace to prevent storing accidental leading/trailing spaces
-      const title = data.title.trim();
+      // const title = data.title.trim();
+
+      // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
+      const title = sanitizePlainText(data.title);
 
       if (title.length > 100) {
         throw new Error("Title must be 100 characters or less.");
@@ -126,7 +140,10 @@ export class UpdateReviewDTO {
       }
 
       // Trim whitespace to prevent storing accidental leading/trailing spaces
-      const text = data.text.trim();
+      // const text = data.text.trim();
+
+      // Sanitize user-provided text input to strip malicious HTML/JS (XSS prevention)
+      const text = sanitizePlainText(data.text);
       this.text = text;
     }
 
