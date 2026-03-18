@@ -12,6 +12,7 @@ import {
   CreateUserDTO,
   ForgotPasswordDTO,
   LoginDTO,
+  UpdateUserDTO,
 } from "../dtos/user.dto.js";
 import { userService } from "../services/user.service.js";
 
@@ -149,6 +150,7 @@ export const getMe = asyncHandler(
 // Patch request for updating a user's name & email
 export const updateDetails = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
+    /*
     // Makes no sense to call this function if neither the user's name or email is getting updated
     if (!req.body.name && !req.body.email) {
       return res.status(400).json({
@@ -164,6 +166,10 @@ export const updateDetails = asyncHandler(
     if (req.body.name) fieldsToUpdate.name = req.body.name;
     // if an email is in the body, update it
     if (req.body.email) fieldsToUpdate.email = req.body.email;
+    */
+
+    // Process and validate the request body through the UpdateUserDTO
+    const dto = new UpdateUserDTO(req.body);
 
     if (!req.user) {
       return res.status(401).json({
@@ -172,8 +178,9 @@ export const updateDetails = asyncHandler(
       });
     }
     // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
-    const user = await userService.updateUserById(req.user.id, fieldsToUpdate);
+    // const user = await userService.updateUserById(req.user.id, fieldsToUpdate);
 
+    const user = await userService.updateUserById(req.user.id, dto);
     if (!user) {
       return res.status(404).json({
         success: false,
