@@ -19,7 +19,12 @@ Example Course structure:
         
   */
 
-import { isBoolean, isNonEmptyString, isNumber } from "../utils/helpers.js";
+import {
+  isBoolean,
+  isNonEmptyString,
+  isNumber,
+  sanitizePlainText,
+} from "../utils/helpers.js";
 import mongoose from "mongoose";
 
 // DTO representing the expected request body for creating a Course
@@ -48,7 +53,9 @@ export class CreateCourseDTO {
     }
 
     // Trim whitespace to prevent storing accidental leading/trailing spaces
-    const title = data.title.trim();
+    // const title = data.title.trim();
+    // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
+    const title = sanitizePlainText(data.title);
     this.title = title;
 
     if (!isNonEmptyString(data.user)) {
@@ -68,7 +75,9 @@ export class CreateCourseDTO {
     }
 
     // Trim whitespace to prevent storing accidental leading/trailing spaces
-    const description = data.description.trim();
+    // const description = data.description.trim();
+    // Sanitize user-provided description input to strip malicious HTML/JS (XSS prevention)
+    const description = sanitizePlainText(data.description);
     this.description = description;
 
     if (!isNonEmptyString(data.minimumSkill)) {
