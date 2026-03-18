@@ -18,7 +18,10 @@
 import { isNonEmptyString, sanitizePlainText } from "../utils/helpers.js";
 
 // Regex used to validate email format (matches mongoose schema)
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Use strict email regex to allow only safe characters and prevent XSS/script injection
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
 // DTO representing the expected request body for creating a User
 // Enforces the same constraints defined in the mongoose schema
