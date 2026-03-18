@@ -34,11 +34,15 @@ export const errorHandler = (
     // 409 Conflict is the correct HTTP status for duplicate resource violations
     statusCode = 409;
 
+    const values = originalErr.keyValue
+      ? Object.values(originalErr.keyValue).join(", ")
+      : "";
+
     // Adjust message grammar based on whether one or multiple fields caused the conflict
     message =
       keys.length > 1
-        ? `Duplicate ${fields} value entered; a bootcamp with those values (${fields}) already exists.`
-        : `Duplicate ${fields} value entered; a bootcamp with that ${fields} value already exists.`;
+        ? `Duplicate ${fields} values entered (${values}); those values already exist.`
+        : `Duplicate ${fields} value entered (${values}); that value already exists.`;
   }
 
   res.status(statusCode).json({
