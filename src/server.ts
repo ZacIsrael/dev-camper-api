@@ -76,7 +76,52 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Set secure HTTP headers
-app.use(helmet());
+// app.use(helmet());
+// Apply Helmet middleware with custom security configuration (adds secure HTTP headers)
+app.use(
+  helmet({
+    // Configure Content Security Policy (CSP) to restrict what resources the browser can load
+    contentSecurityPolicy: {
+      directives: {
+        // Default rule: only allow resources from this server (same origin)
+        defaultSrc: ["'self'"],
+
+        // Only allow JavaScript to be executed if it comes from this server
+        scriptSrc: ["'self'"],
+
+        // Allow styles from this server and inline styles (needed for some setups, but less secure)
+        styleSrc: ["'self'", "'unsafe-inline'"],
+
+        // Allow images from this server and base64-encoded images (data URLs)
+        imgSrc: ["'self'", "data:"],
+
+        // Allow fonts from this server and embedded (base64) fonts
+        fontSrc: ["'self'", "data:"],
+
+        // Restrict API/fetch/AJAX/WebSocket requests to this server only
+        connectSrc: ["'self'"],
+
+        // Block all plugins like Flash, Java applets (prevents legacy injection attacks)
+        objectSrc: ["'none'"],
+
+        // Prevent this app from being embedded in iframes (protects against clickjacking)
+        frameAncestors: ["'none'"],
+
+        // Restrict the base URL for relative links to this origin only
+        baseUri: ["'self'"],
+
+        // Only allow form submissions to this server
+        formAction: ["'self'"],
+
+        // Automatically upgrade HTTP requests to HTTPS (if applicable)
+        upgradeInsecureRequests: [],
+      },
+    },
+
+    // Disable strict cross-origin isolation (avoids issues in development environments)
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // Enable Cross-Origin Resource Sharing (CORS)
 // Allows frontend apps from different origins to
