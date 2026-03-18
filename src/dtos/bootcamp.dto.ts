@@ -1,7 +1,11 @@
 // This file validates and sanitizes incoming API request data
 // before it is used to create a Bootcamp document
 import type { Career } from "../types/career.type.js";
-import { isBoolean, isNonEmptyString } from "../utils/helpers.js";
+import {
+  isBoolean,
+  isNonEmptyString,
+  sanitizePlainText,
+} from "../utils/helpers.js";
 import mongoose from "mongoose";
 
 // Regex used to validate email format (matches mongoose schema)
@@ -77,7 +81,10 @@ export class CreateBootcampDTO {
     }
 
     // Trim name to remove extra whitespace
-    const name = data.name.trim();
+    // const name = data.name.trim();
+
+    // Sanitize user-provided name input to strip malicious HTML/JS (XSS prevention)
+    const name = sanitizePlainText(data.name);
 
     // Enforce max length defined in schema
     if (name.length > 50) {
@@ -105,7 +112,10 @@ export class CreateBootcampDTO {
     }
 
     // Trim description to remove extra whitespace
-    const description = data.description.trim();
+    // const description = data.description.trim();
+
+    // Sanitize user-provided description input to strip malicious HTML/JS (XSS prevention)
+    const description = sanitizePlainText(data.description);
 
     // Enforce max length defined in schema
     if (description.length > 165) {
@@ -121,7 +131,10 @@ export class CreateBootcampDTO {
     }
 
     // Trim and assign address
-    this.address = data.address.trim();
+    // this.address = data.address.trim();
+
+    // Sanitize user-provided address input to strip malicious HTML/JS (XSS prevention)
+    this.address = sanitizePlainText(data.address);
 
     // Validate careers array exists and is not empty
     if (!Array.isArray(data.careers) || data.careers.length === 0) {
