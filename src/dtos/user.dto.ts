@@ -15,7 +15,7 @@
 
 */
 
-import { isBoolean, isNonEmptyString, isNumber } from "../utils/helpers.js";
+import { isNonEmptyString, sanitizePlainText } from "../utils/helpers.js";
 
 // Regex used to validate email format (matches mongoose schema)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,7 +37,10 @@ export class CreateUserDTO {
     }
 
     // Trim name to remove extra whitespace
-    const name = data.name.trim();
+    // const name = data.name.trim();
+
+    // Sanitize user-provided name input to strip malicious HTML/JS (XSS prevention)
+    const name = sanitizePlainText(data.name);
 
     // Enforce max length defined in schema
     if (name.length > 50) {
@@ -179,7 +182,8 @@ export class UpdateUserDTO {
       if (!isNonEmptyString(data.name)) {
         throw new Error("Please provide a name");
       }
-      this.name = data.name;
+      // Sanitize user-provided name input to strip malicious HTML/JS (XSS prevention)
+      this.name = sanitizePlainText(data.name);
     }
 
     if (data.password !== undefined) {
