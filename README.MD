@@ -72,7 +72,7 @@ It is a robust TypeScript implementation of Brad Traversy’s original DevCamper
   * Once logged in, the JWT is stored in an HTTP-only cookie
   * The token is NOT exposed in the JSON response body
 - User logout
-  * Cookie will be sent to set token = none
+  * Logout clears the authentication cookie
 - Get user
   * Route to get the currently logged in user (via token)
 - Password reset (lost password)
