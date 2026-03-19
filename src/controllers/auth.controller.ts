@@ -54,6 +54,7 @@ export const register = asyncHandler(
     dto = new CreateUserDTO(req.body);
     console.log("register: dto = ", dto);
 
+    /*
     // Create the user via the service layer.
     // createUser returns a the newly created user MongoDB document and its jwt token
     const { user, token } = await userService.createUser(dto);
@@ -64,7 +65,15 @@ export const register = asyncHandler(
       msg: "User successfully registered.",
       user: user,
       token,
-    });
+    }); 
+    */
+
+    const { user } = await userService.createUser(dto);
+
+    // Ensure hashed password is never returned to the client
+    (user as any).password = undefined;
+
+    sendTokenResponse(user, 201, res);
   }
 );
 
@@ -391,6 +400,7 @@ export const resetPassword = asyncHandler(
 // Retrieve token from model, create cookie and send response
 // Helper function to generate a JWT, set it in an HTTP-only cookie,
 // and send a standardized auth response back to the client
+/*
 const sendTokenResponse = (
   user: UserDocument,
   statusCode: number,
@@ -424,5 +434,49 @@ const sendTokenResponse = (
   res.status(statusCode).cookie("token", token, options).json({
     success: true,
     token,
+  });
+};
+*/
+
+const sendTokenResponse = (
+  user: UserDocument,
+  statusCode: number,
+  res: Response
+) => {
+  // Call the instance method on the user model to create a signed JWT
+  const token = user.getSignedJwtToken();
+
+  // Ensure password is never returned in auth responses
+  (user as any).password = undefined;
+
+  // Cookie configuration options
+  const options: {
+    expires: Date;
+    httpOnly: boolean;
+    secure?: boolean;
+    sameSite: "strict";
+  } = {
+    // Set cookie expiration based on env variable (in days)
+    expires: new Date(
+      Date.now() +
+        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 1) * 24 * 60 * 60 * 1000
+    ),
+
+    // Prevent client-side JavaScript from accessing the cookie
+    httpOnly: true,
+
+    // Helps protect against CSRF
+    sameSite: "strict",
+  };
+
+  // Ensure cookies are only sent over HTTPS in production
+  if (process.env.NODE_ENV === "production") {
+    options.secure = true;
+  }
+
+  // Send response with JWT stored only in cookie
+  res.status(statusCode).cookie("token", token, options).json({
+    success: true,
+    user,
   });
 };
