@@ -127,6 +127,7 @@ export const login = asyncHandler(
 // Logs the user out by clearing the auth cookie
 export const logout = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
+    /*
     // Overwrite the existing JWT cookie with a dummy value
     // and set a very short expiration so the browser removes it
     res.cookie("token", "none", {
@@ -134,6 +135,21 @@ export const logout = asyncHandler(
       expires: new Date(Date.now() + 10 * 1000),
       // prevents client-side JS from accessing the cookie
       httpOnly: true,
+    });
+    */
+
+    res.cookie("token", "none", {
+      // Expire the cookie immediately so the browser removes it
+      expires: new Date(Date.now() + 10 * 1000),
+
+      // Prevent client-side JavaScript from accessing the cookie
+      httpOnly: true,
+
+      // Match the same CSRF protection setting used when issuing the auth cookie
+      sameSite: "strict",
+
+      // Ensure the cookie is only sent over HTTPS in production
+      secure: process.env.NODE_ENV === "production",
     });
 
     // Send success response to confirm logout
