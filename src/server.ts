@@ -126,7 +126,16 @@ app.use(
 // Enable Cross-Origin Resource Sharing (CORS)
 // Allows frontend apps from different origins to
 // communicate with this API
-app.use(cors());
+// app.use(cors());
+
+// Prevents random websites from hitting the API
+app.use(
+  cors({
+    // frontend url goes here
+    origin: ["http://localhost:3000"], 
+    credentials: true,
+  })
+);
 /*
  
 // If I had a frontend app to connect to this api, 
@@ -177,7 +186,23 @@ const API_VERSION = 1;
 // Register file upload middleware to handle multipart/form-data requests
 // This parses incoming file uploads and attaches them to 'req.files'
 // so uploaded files can be accessed in controllers and route handlers
-app.use(fileUpload());
+// app.use(fileUpload());
+
+app.use(
+  fileUpload({
+    // Limit file size globally to 5MB (prevents large payload attacks)
+    limits: { fileSize: 5 * 1024 * 1024 }, 
+
+    // Automatically reject requests that exceed limits
+    abortOnLimit: true,
+
+    // Strip unsafe characters from filenames
+    safeFileNames: true,
+
+    // Preserve file extensions while sanitizing names
+    preserveExtension: true,
+  })
+);
 
 // Configure Express to serve static files (such as uploaded photos)
 // from the root-level 'public' directory
