@@ -21,6 +21,7 @@ It is a robust TypeScript implementation of Brad Traversy’s original DevCamper
 - Upload a photo for bootcamp
   * Owner only
   * Photo will be uploaded to local filesystem
+  * Only safe image types are allowed (jpg, jpeg, png, webp)
 - Update bootcamps
   * Owner only
   * Validation on update
@@ -62,12 +63,14 @@ It is a robust TypeScript implementation of Brad Traversy’s original DevCamper
   * JWT and cookie should expire in X days (can be configured in your .env file)
 - User registration
   * Register as a "user" or "publisher"
-  * Once registered, a token will be sent along with a cookie (token = xxx)
+  * Once registered, the JWT is stored in an HTTP-only cookie
+  * The token is NOT exposed in the JSON response body
   * Passwords must be hashed
 - User login
   * User can login with email and password
   * Plain text password will compare with stored hashed password
-  * Once logged in, a token will be sent along with a cookie (token = xxx)
+  * Once logged in, the JWT is stored in an HTTP-only cookie
+  * The token is NOT exposed in the JSON response body
 - User logout
   * Cookie will be sent to set token = none
 - Get user
@@ -86,12 +89,21 @@ It is a robust TypeScript implementation of Brad Traversy’s original DevCamper
 
 ## Security
 - Encrypt passwords and reset tokens
-- Prevent cross site scripting - XSS
-- Prevent NoSQL injections
-- Add a rate limit for requests of 100 requests per 15 minutes
-- Protect against http param polution
-- Add headers for security (helmet)
-- Use cors to make API public (for now)
+- Reduce stored XSS risk by sanitizing user-controlled input in DTOs
+- Strengthen input validation (e.g., strict email validation)
+- Prevent NoSQL injection attacks using express-mongo-sanitize
+- Add a rate limit of 100 requests per 15 minutes
+- Protect against HTTP parameter pollution (HPP)
+- Add secure HTTP headers using Helmet
+- Enforce a Content Security Policy (CSP) for defense-in-depth against XSS
+- Restrict CORS to trusted frontend origins and allow credentials for cookie-based authentication
+- Harden file uploads with:
+  - File size limits
+  - Safe filename sanitization
+  - Strict MIME type validation
+  - Strict file extension validation
+- Store authentication tokens in HTTP-only cookies (not accessible via JavaScript)
+- Use SameSite cookies to mitigate CSRF attacks
 
 ## Documentation
 - Use Postman to create documentation
