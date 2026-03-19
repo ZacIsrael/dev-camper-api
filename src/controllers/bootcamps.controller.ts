@@ -5,6 +5,8 @@ import express from "express";
 import type { Application, Request, Response, NextFunction } from "express";
 import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
 import { ObjectId } from "mongodb";
+// Used to safely inspect and normalize file extensions
+import path from "path";
 import { bootcampService } from "../services/bootcamp.service.js";
 import mongoose from "mongoose";
 import { ErrorResponse } from "../utils/errorResponse.js";
@@ -12,6 +14,12 @@ import { asyncHandler } from "../middleware/async.middleware.js";
 import { geocoder } from "../utils/geocoder.js";
 import { Bootcamp } from "../models/bootcamp.model.js";
 import { userService } from "../services/user.service.js";
+
+// Only allow files with the following extensions to be uploaded
+// for bootcamp photos
+const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 
 /* ==== Implementation with middleware async handler ==== */
 export const getBootcamps = asyncHandler(
@@ -443,7 +451,6 @@ export const uploadBootcampPhoto = asyncHandler(
         error: `Invalid bootcamp id: ${id}`,
       });
     }
-    
 
     // retrieve bootcamp with given id using bootcamp service
     let bootcamp = await bootcampService.getBootcampById(id);
@@ -487,9 +494,6 @@ export const uploadBootcampPhoto = asyncHandler(
         error: `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
       });
     }
-
-
-
 
     // a file was not uploaded
     if (files === undefined || files === null) {
@@ -537,11 +541,30 @@ export const uploadBootcampPhoto = asyncHandler(
       });
     }
 
+    const fileExtension = path.extname(file.name).toLowerCase();
+
     // Ensure that the file uploaded is a photo
-    if (!file.mimetype.startsWith("image")) {
+    // if (!file.mimetype.startsWith("image")) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     error: "Please upload a valid photo",
+    //   });
+    // }
+
+    // Validate MIME type against strict allowlist to block unsafe formats (e.g., SVG, HTML)
+    if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
       return res.status(400).json({
         success: false,
-        error: "Please upload a valid photo",
+        error: "Please upload a valid image file (jpg, jpeg, png, or webp)",
+      });
+    }
+
+    // Validate file extension to ensure only safe image types are accepted (defense-in-depth)
+    if (!ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Please upload a valid image extension (jpg, jpeg, png, or webp)",
       });
     }
 
@@ -556,7 +579,8 @@ export const uploadBootcampPhoto = asyncHandler(
     }
 
     // Create custom file name
-    const newFileName = `photo_${bootcamp._id}_${file.name}`;
+    // const newFileName = `photo_${bootcamp._id}_${file.name}`;
+    const newFileName = `photo_${bootcamp._id}${fileExtension}`;
 
     // Directory of where the file will be stored
     const uploadFileDirectory =
