@@ -29,6 +29,9 @@ import { fileURLToPath } from "node:url";
 // import morgan middleware logger
 import morgan from "morgan";
 
+// import custom middleware to prevent against csrf
+import { csrfProtection } from "./middleware/csrf.middleware.js";
+
 // custom error handler middleware
 import { errorHandler } from "./middleware/error.middleware.js";
 
@@ -132,7 +135,7 @@ app.use(
 app.use(
   cors({
     // frontend url goes here
-    origin: ["http://localhost:3000"], 
+    origin: ["http://localhost:3000"],
     credentials: true,
   })
 );
@@ -191,7 +194,7 @@ const API_VERSION = 1;
 app.use(
   fileUpload({
     // Limit file size globally to 5MB (prevents large payload attacks)
-    limits: { fileSize: 5 * 1024 * 1024 }, 
+    limits: { fileSize: 5 * 1024 * 1024 },
 
     // Automatically reject requests that exceed limits
     abortOnLimit: true,
@@ -203,6 +206,8 @@ app.use(
     preserveExtension: true,
   })
 );
+
+app.use(csrfProtection);
 
 // Configure Express to serve static files (such as uploaded photos)
 // from the root-level 'public' directory
