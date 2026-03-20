@@ -104,6 +104,7 @@ It is a robust TypeScript implementation of Brad Traversy’s original DevCamper
   - Strict file extension validation
 - Store authentication tokens in HTTP-only cookies (not accessible via JavaScript)
 - Use SameSite cookies to mitigate CSRF attacks
+- Protect state-changing requests against CSRF using SameSite cookies, trusted-origin CORS, Origin/Referer checks, and a required custom request header
 
 ## Documentation
 - Use Postman to create documentation
