@@ -324,15 +324,14 @@ export const updateReview = asyncHandler(
       });
     }
 
+    // This line is unnecessary
     // add logged in user's id to the body of the request
-    req.body.user = req.user.id;
+    // req.body.user = req.user.id;
     // see what's in the body of the request
-    console.log("updateReview: req.body = ", req.body);
+    // console.log("updateReview: req.body = ", req.body);
 
     // review id
     const { id } = req.params;
-    // destructure body of the request
-    const { body } = req;
 
     // 400: invalid ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
