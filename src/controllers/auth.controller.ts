@@ -475,7 +475,7 @@ const sendTokenResponse = (
     // Set cookie expiration based on env variable (in days)
     expires: new Date(
       Date.now() +
-        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 1) * 24 * 60 * 60 * 1000
+        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 0.125) * 24 * 60 * 60 * 1000
     ),
 
     // Prevent client-side JavaScript from accessing the cookie
