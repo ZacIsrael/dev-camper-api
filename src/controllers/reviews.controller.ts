@@ -10,6 +10,8 @@ import { CreateReviewDTO, UpdateReviewDTO } from "../dtos/review.dto.js";
 // GET /api/v1/reviews route
 export const getReviews = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Only allow filtering on these fields (prevents injection via arbitrary keys)
+    const ALLOWED_FILTER_FIELDS = ["title", "rating", "bootcamp", "user"];
     const { query } = req;
     console.log("req.query = ", query);
     // stores returned reviews
@@ -27,8 +29,8 @@ export const getReviews = asyncHandler(
     // copy of req.query object
     const reqQuery = { ...query };
 
-    // Build filter object (no JSON.parse needed)
-    let filter: Record<string, any> = { ...reqQuery };
+    // Build filter object
+    let filter: Record<string, any> = {};
 
     // Fields to exclude from the request's query strings
     const removeFields = ["select", "sort", "page", "limit"];
@@ -94,28 +96,50 @@ export const getReviews = asyncHandler(
       limit,
     };
 
-    if (Object.keys(req.query).length > 0) {
-      // Query strings exist some filtering needs to be done
+    if (Object.keys(reqQuery).length > 0) {
+      // Only allow these MongoDB-style comparison operators
+      const ALLOWED_FILTER_OPERATORS = ["gt", "gte", "lt", "lte", "in"];
 
-      // Convert to string only to run the regex operator replacement
-      let queryStr = JSON.stringify(reqQuery);
+      // Safe filter object that will be passed to MongoDB
+      const safeFilter: Record<string, any> = {};
 
-      // Regex expression to replace supported comparison operators with MongoDB operators
-      // Example: gt -> $gt, lte -> $lte
-      queryStr = queryStr.replace(
-        /\b(gt|gte|lt|lte|in)\b/g,
-        (match) => `$${match}`
-      );
+      for (const key in reqQuery) {
+        // Ignore any field not explicitly allowed
+        if (!ALLOWED_FILTER_FIELDS.includes(key)) continue;
 
-      // debugging
-      console.log("queryStr = ", queryStr);
+        const value = reqQuery[key];
 
-      // Turn it back into an object (safe because queryStr is always valid JSON here)
-      filter = JSON.parse(queryStr);
+        // Handle operator-based filters like rating[gte]=4
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          const operatorObj: Record<string, any> = {};
 
-      // Message shown when no courses match the applied filters
-      emptyReturnMsg = `There are no reviews in the 'review' mongoDB collection that match filter = ${queryStr}.`;
-      foundBootcampMsg = `Successfully retrieved all reviews from the 'review' mongoDB collection that match the filter = ${queryStr}.`;
+          for (const op in value as Record<string, any>) {
+            if (!ALLOWED_FILTER_OPERATORS.includes(op)) continue;
+
+            operatorObj[`$${op}`] = (value as Record<string, any>)[op];
+          }
+
+          if (Object.keys(operatorObj).length > 0) {
+            safeFilter[key] = operatorObj;
+          }
+        } else {
+          // Direct equality filter
+          safeFilter[key] = value;
+        }
+      }
+
+      filter = safeFilter;
+
+      console.log("safeFilter = ", safeFilter);
+
+      const safeFilterStr = JSON.stringify(safeFilter);
+
+      emptyReturnMsg = `There are no reviews in the 'review' mongoDB collection that match filter = ${safeFilterStr}.`;
+      foundBootcampMsg = `Successfully retrieved all reviews from the 'review' mongoDB collection that match the filter = ${safeFilterStr}.`;
     } else {
       // Message shown when the collection exists but contains no courses
       emptyReturnMsg =
