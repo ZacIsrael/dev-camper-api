@@ -33,6 +33,7 @@ export const protect = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     let token;
 
+    /*
     // Check for token in Authorization header (Bearer <token>)
     if (
       req.headers.authorization &&
@@ -44,7 +45,19 @@ export const protect = asyncHandler(
       // Otherwise check for token stored in cookies
     } else if (req.cookies.token) {
       token = req.cookies.token;
+    } 
+    */
+
+    // Check for token stored in cookies
+    // Only accept token from HTTP-only cookie (prevents token theft via XSS)
+    if (req.cookies.token) {
+      token = req.cookies.token;
     }
+
+    // Debugging
+    // console.log("auth.middleware: raw cookie header =", req.headers.cookie);
+    // console.log("auth.middleware: parsed cookies =", req.cookies);
+    // console.log("auth.middleware: token from cookie =", req.cookies?.token);
 
     // If no token is found, deny access
     if (!token) {
@@ -76,7 +89,8 @@ export const protect = asyncHandler(
 
       // Continue to next middleware/route handler
       next();
-    } catch {
+    } catch (err) {
+      console.log("auth.middleware: jwt verify error =", err);
       // If token verification fails, request will hang unless handled
       return res.status(401).json({
         success: false,
