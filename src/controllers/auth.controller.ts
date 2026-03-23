@@ -150,6 +150,8 @@ export const logout = asyncHandler(
 
       // Ensure the cookie is only sent over HTTPS in production
       secure: process.env.NODE_ENV === "production",
+
+      path: "/",
     });
 
     // Send success response to confirm logout
@@ -471,11 +473,16 @@ const sendTokenResponse = (
     httpOnly: boolean;
     secure?: boolean;
     sameSite: "strict";
+    path: string;
   } = {
     // Set cookie expiration based on env variable (in days)
     expires: new Date(
       Date.now() +
-        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 0.125) * 24 * 60 * 60 * 1000
+        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 0.125) *
+          24 *
+          60 *
+          60 *
+          1000
     ),
 
     // Prevent client-side JavaScript from accessing the cookie
@@ -483,6 +490,8 @@ const sendTokenResponse = (
 
     // Helps protect against CSRF
     sameSite: "strict",
+    // path to cookie
+    path: "/",
   };
 
   // Ensure cookies are only sent over HTTPS in production
