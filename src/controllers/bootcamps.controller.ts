@@ -24,6 +24,16 @@ const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 /* ==== Implementation with middleware async handler ==== */
 export const getBootcamps = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Only allow filtering on these fields (prevents injection via arbitrary keys)
+    const ALLOWED_FILTER_FIELDS = [
+      "name",
+      "careers",
+      "housing",
+      "jobAssistance",
+      "jobGuarantee",
+      "averageCost",
+    ];
+
     const { query } = req;
     console.log("req.query = ", query);
     // stores returned bootcamps
@@ -102,34 +112,64 @@ export const getBootcamps = asyncHandler(
       limit,
     };
 
-    if (Object.keys(req.query).length > 0) {
-      // Query strings exist some filtering needs to be done
+    if (Object.keys(reqQuery).length > 0) {
+      // Query strings exist, so filtering needs to be done
 
-      // Convert the query object into a JSON string so it can be manipulated
-      let queryStr = JSON.stringify(reqQuery);
+      // Only allow these MongoDB-style comparison operators in filter queries
+      const ALLOWED_FILTER_OPERATORS = ["gt", "gte", "lt", "lte", "in"];
 
-      // Regex expression to replace supported comparison operators with MongoDB operators
-      // Example: gt -> $gt, lte -> $lte
-      queryStr = queryStr.replace(
-        /\b(gt|gte|lt|lte|in)\b/g,
-        (match) => `$${match}`
-      );
+      // Safe filter object that will be passed to MongoDB
+      const safeFilter: Record<string, any> = {};
+
+      // Loop through each query parameter after removing reserved fields
+      for (const key in reqQuery) {
+        // Ignore any field that is not explicitly allowed for filtering
+        if (!ALLOWED_FILTER_FIELDS.includes(key)) continue;
+
+        const value = reqQuery[key];
+
+        // Support nested operator filters like averageCost[gte]=1000
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          const operatorObj: Record<string, any> = {};
+
+          for (const op in value as Record<string, any>) {
+            // Ignore any operator that is not explicitly allowed
+            if (!ALLOWED_FILTER_OPERATORS.includes(op)) continue;
+
+            operatorObj[`$${op}`] = (value as Record<string, any>)[op];
+          }
+
+          // Only attach the field if at least one valid operator survived
+          if (Object.keys(operatorObj).length > 0) {
+            safeFilter[key] = operatorObj;
+          }
+        } else {
+          // Direct equality filter for simple values like careers=Web Development
+          safeFilter[key] = value;
+        }
+      }
 
       // debugging
-      console.log("queryStr = ", queryStr);
+      console.log("safeFilter = ", safeFilter);
 
-      // Parse the modified query string back into an object
-      // and pass it to the service for filtered database retrieval
+      // Retrieve bootcamps using the allowlist-based safe filter
       bootcamps = await bootcampService.getFilteredBootcamps(
-        JSON.parse(queryStr),
+        safeFilter,
         selectFields,
         sortBy,
         paginationObj
       );
 
+      // Convert safe filter to string for response/debug messages
+      const safeFilterStr = JSON.stringify(safeFilter);
+
       // Message shown when no bootcamps match the applied filters
-      emptyReturnMsg = `There are no bootcamps in the 'bootcamp' mongoDB collection that match filter = ${queryStr}.`;
-      foundBootcampMsg = `Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection that match the filter = ${queryStr}.`;
+      emptyReturnMsg = `There are no bootcamps in the 'bootcamp' mongoDB collection that match filter = ${safeFilterStr}.`;
+      foundBootcampMsg = `Successfully retrieved all bootcamps from the 'bootcamp' mongoDB collection that match the filter = ${safeFilterStr}.`;
     } else {
       // use service retrieve all bootcamps
       bootcamps = await bootcampService.getAllBootcamps(
