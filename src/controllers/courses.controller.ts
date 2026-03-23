@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { CreateCourseDTO } from "../dtos/course.dto.js";
+import { CreateCourseDTO, UpdateCourseDTO } from "../dtos/course.dto.js";
 import { courseService } from "../services/course.service.js";
 
 import mongoose from "mongoose";
@@ -349,8 +349,10 @@ export const updateCourse = asyncHandler(
       });
     }
 
+    // This line is actually unnecessary
     // add logged in user's id to the body of the request
-    req.body.user = req.user.id;
+    // req.body.user = req.user.id;
+
     // see what's in the body of the request
     console.log("updateCourse: req.body = ", req.body);
 
@@ -385,8 +387,14 @@ export const updateCourse = asyncHandler(
       });
     }
 
+    // data transfer object (object that will contain the processed request)
+    let dto: UpdateCourseDTO;
+    // process and validate the body of the request (see course.dto.ts)
+    dto = new UpdateCourseDTO(req.body);
+    console.log("updateCourse: dto = ", dto);
+
     // use service to update a course
-    course = await courseService.updateCourseById(id, body);
+    course = await courseService.updateCourseById(id, dto);
 
     // Redundant
     // 404: not found
