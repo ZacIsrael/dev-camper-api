@@ -3,6 +3,10 @@
 // MongoDB module
 import mongoose from "mongoose";
 
+// Enable Mongoose filter sanitization to neutralize query selector injection
+// by treating operator objects as literal values
+mongoose.set("sanitizeFilter", true);
+
 // Loads environment variables from a `.env` file into process.env
 // Used for storing sensitive data like database credentials, API keys, etc.
 import dotenv from "dotenv";
