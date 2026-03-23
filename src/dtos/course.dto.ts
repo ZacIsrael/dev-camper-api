@@ -128,3 +128,96 @@ export class CreateCourseDTO {
     // this.bootcamp = bootcampId;
   }
 }
+
+// DTO representing the expected request body for updating a Course
+// Allows partial updates while validating only the fields that are provided
+export class UpdateCourseDTO {
+  title?: string;
+  description?: string;
+  weeks?: number;
+  tuition?: number;
+  minimumSkill?: string;
+  scholarhipsAvailable?: boolean;
+
+  constructor(data: Partial<UpdateCourseDTO>) {
+    if (
+      data.title === undefined &&
+      data.description === undefined &&
+      data.weeks === undefined &&
+      data.tuition === undefined &&
+      data.minimumSkill === undefined &&
+      data.scholarhipsAvailable === undefined
+    ) {
+      throw new Error(
+        "At least one of the following fields must be updated: title, description, weeks, tuition, minimumSkill, scholarhipsAvailable"
+      );
+    }
+
+    if (data.title !== undefined) {
+      if (!isNonEmptyString(data.title)) {
+        throw new Error("Please add a title");
+      }
+
+      // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
+      const title = sanitizePlainText(data.title);
+
+      this.title = title;
+    }
+
+    if (data.description !== undefined) {
+      if (!isNonEmptyString(data.description)) {
+        throw new Error("Please add a description");
+      }
+
+      // Sanitize user-provided description input to strip malicious HTML/JS (XSS prevention)
+      const description = sanitizePlainText(data.description);
+
+      this.description = description;
+    }
+
+    if (data.minimumSkill !== undefined) {
+      if (!isNonEmptyString(data.minimumSkill)) {
+        throw new Error("Please add a valid minimum skill level");
+      }
+
+      // Ensure minimumSkill matches one of the allowed enum values
+      if (
+        data.minimumSkill !== "beginner" &&
+        data.minimumSkill !== "intermediate" &&
+        data.minimumSkill !== "advanced"
+      ) {
+        throw new Error(
+          "Please add a valid minimum skill level: beginner, intermediate, or advanced"
+        );
+      }
+
+      this.minimumSkill = data.minimumSkill;
+    }
+
+    if (data.weeks !== undefined) {
+      if (!isNumber(data.weeks)) {
+        throw new Error(
+          "Please add a number for duration in weeks of this course"
+        );
+      }
+
+      this.weeks = data.weeks;
+    }
+
+    if (data.tuition !== undefined) {
+      if (!isNumber(data.tuition)) {
+        throw new Error("Please add a cost for the tuition of this course");
+      }
+
+      this.tuition = data.tuition;
+    }
+
+    if (data.scholarhipsAvailable !== undefined) {
+      if (!isBoolean(data.scholarhipsAvailable)) {
+        throw new Error("scholarhipsAvailable must be a boolean");
+      }
+
+      this.scholarhipsAvailable = data.scholarhipsAvailable;
+    }
+  }
+}
