@@ -142,7 +142,7 @@ userSchema.methods.getSignedJwtToken = function (): string {
 
   // Pull expiry from env and provide a safe default
   const expiresIn: SignOptions["expiresIn"] = (process.env.JWT_EXPIRES_IN ??
-    "1d") as SignOptions["expiresIn"];
+    "3h") as SignOptions["expiresIn"];
 
   // Return the signed token
   return jwt.sign({ id: this._id.toString() }, jwtSecret as Secret, {
