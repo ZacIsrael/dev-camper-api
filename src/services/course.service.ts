@@ -23,8 +23,6 @@ export const courseService = {
       weeks: dto.weeks,
       scholarhipsAvailable: dto.scholarhipsAvailable,
       bootcamp: dto.bootcamp,
-      // will worry about this once User schema has been implemented
-      // user: dto.user
     });
 
     // create the new course db document
