@@ -11,6 +11,16 @@ import { bootcampService } from "../services/bootcamp.service.js";
 
 export const getCourses = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // Only allow filtering on these fields (prevents injection via arbitrary keys)
+    const ALLOWED_FILTER_FIELDS = [
+      "title",
+      "minimumSkill",
+      "tuition",
+      "weeks",
+      "scholarhipsAvailable",
+      "bootcamp",
+    ];
+
     const { query } = req;
     console.log("req.query = ", query);
     // stores returned courses
@@ -28,8 +38,8 @@ export const getCourses = asyncHandler(
     // copy of req.query object
     const reqQuery = { ...query };
 
-    // Build filter object (no JSON.parse needed)
-    let filter: Record<string, any> = { ...reqQuery };
+    // Build filter object
+    let filter: Record<string, any> = {};
 
     // Fields to exclude from the request's query strings
     const removeFields = ["select", "sort", "page", "limit"];
@@ -95,28 +105,58 @@ export const getCourses = asyncHandler(
       limit,
     };
 
-    if (Object.keys(req.query).length > 0) {
-      // Query strings exist some filtering needs to be done
+    if (Object.keys(reqQuery).length > 0) {
+      // Query strings exist, so filtering needs to be done
 
-      // Convert to string only to run the regex operator replacement
-      let queryStr = JSON.stringify(reqQuery);
+      // Only allow these MongoDB-style comparison operators in filter queries
+      const ALLOWED_FILTER_OPERATORS = ["gt", "gte", "lt", "lte", "in"];
 
-      // Regex expression to replace supported comparison operators with MongoDB operators
-      // Example: gt -> $gt, lte -> $lte
-      queryStr = queryStr.replace(
-        /\b(gt|gte|lt|lte|in)\b/g,
-        (match) => `$${match}`
-      );
+      // Safe filter object that will be passed to MongoDB
+      const safeFilter: Record<string, any> = {};
+
+      // Loop through each query parameter after removing reserved fields
+      for (const key in reqQuery) {
+        // Ignore any field that is not explicitly allowed for filtering
+        if (!ALLOWED_FILTER_FIELDS.includes(key)) continue;
+
+        const value = reqQuery[key];
+
+        // Support nested operator filters like tuition[gte]=5000
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          const operatorObj: Record<string, any> = {};
+
+          for (const op in value as Record<string, any>) {
+            // Ignore any operator that is not explicitly allowed
+            if (!ALLOWED_FILTER_OPERATORS.includes(op)) continue;
+
+            operatorObj[`$${op}`] = (value as Record<string, any>)[op];
+          }
+
+          // Only attach the field if at least one valid operator survived
+          if (Object.keys(operatorObj).length > 0) {
+            safeFilter[key] = operatorObj;
+          }
+        } else {
+          // Direct equality filter for simple values like minimumSkill=beginner
+          safeFilter[key] = value;
+        }
+      }
+
+      // Use allowlist-based filter instead of raw query-derived filter
+      filter = safeFilter;
 
       // debugging
-      console.log("queryStr = ", queryStr);
+      console.log("safeFilter = ", safeFilter);
 
-      // Turn it back into an object (safe because queryStr is always valid JSON here)
-      filter = JSON.parse(queryStr);
+      const safeFilterStr = JSON.stringify(safeFilter);
 
       // Message shown when no courses match the applied filters
-      emptyReturnMsg = `There are no courses in the 'course' mongoDB collection that match filter = ${queryStr}.`;
-      foundBootcampMsg = `Successfully retrieved all courses from the 'course' mongoDB collection that match the filter = ${queryStr}.`;
+      emptyReturnMsg = `There are no courses in the 'course' mongoDB collection that match filter = ${safeFilterStr}.`;
+      foundBootcampMsg = `Successfully retrieved all courses from the 'course' mongoDB collection that match the filter = ${safeFilterStr}.`;
     } else {
       // Message shown when the collection exists but contains no courses
       emptyReturnMsg =
@@ -156,7 +196,7 @@ export const getCourses = asyncHandler(
     }
 
     // debugging
-    console.log(`Bootcamp id does not exist. Filter = `, filter);
+    console.log(`Bootcamp id exists. Filter = `, filter);
 
     // Parse the modified query string back into an object
     // and pass it to the service for filtered database retrieval
@@ -389,7 +429,6 @@ export const deleteCourse = asyncHandler(
         error: `Course with id = ${id} can't be deleted; No user is logged in`,
       });
     }
-
 
     console.log("deleteCourse: req.user = ", req.user);
 
