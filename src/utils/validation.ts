@@ -53,15 +53,19 @@ export const rejectUnknownFields = (
   allowedFields: string[]
 ): void => {
   if (!isPlainObject(data)) {
+    // data is not a plain object so throw an error
     throw new Error("Request data must be a valid object");
   }
 
+  // Retrieve fieds from the object
   const receivedFields = Object.keys(data);
 
+  // Keep track of possible unaccepted/unknown fields in the object
   const unknownFields = receivedFields.filter(
     (field) => !allowedFields.includes(field)
   );
 
+  // if the object contains fields that are not allowed, throw an error
   if (unknownFields.length > 0) {
     throw new Error(`Unknown field(s): ${unknownFields.join(", ")}`);
   }
@@ -80,21 +84,24 @@ export const isValidEmail = (value: unknown): value is string => {
 
   const email = value.trim().toLowerCase();
 
-  // Reasonably strict email format check for typical API use cases.
+  // Reasonably strict regex email format check for typical API use cases.
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  // Returns boolean value that indicates whether or not the value passed in
+  // is a correctly formatted email; test() function compares the value to the 
+  // emailRegex regex expression.
   return emailRegex.test(email);
 };
 
 /**
  * Validates password strength.
  *
- * Current policy:
+ * Current policy (for now):
  * - must be a string
  * - must be at least 8 characters
  * - must not exceed 128 characters
  *
- * You can tighten this later if desired by requiring:
+ * Can be tightened this later by requiring:
  * - uppercase letters
  * - lowercase letters
  * - numbers
@@ -105,8 +112,11 @@ export const isValidPassword = (value: unknown): value is string => {
     return false;
   }
 
+  // remove leading & trailing white spaces from the value
   const password = value.trim();
 
+  // Return boolean that indictaes whether the trimmed value
+  // is at least 8 characters and no greater than 128 characters
   return password.length >= 8 && password.length <= 128;
 };
 
@@ -264,6 +274,7 @@ export const validateSortFields = (
 
   const sortFields = sortValue.split(",").map((field) => field.trim());
 
+  // Ensures that all of the fields are in the allowed list array
   for (const rawField of sortFields) {
     const normalizedField = rawField.startsWith("-")
       ? rawField.slice(1)
