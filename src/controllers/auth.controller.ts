@@ -8,12 +8,6 @@ import crypto from "crypto";
 
 import { asyncHandler } from "../middleware/async.middleware.js";
 
-import {
-  CreateUserDTO,
-  ForgotPasswordDTO,
-  LoginDTO,
-  UpdateUserDTO,
-} from "../dtos/user.dto.js";
 import { userService } from "../services/user.service.js";
 
 import { isNonEmptyString } from "../utils/helpers.js";
@@ -47,27 +41,12 @@ export const register = asyncHandler(
     // see what's in the body of the request
     console.log("register: req.body = ", req.body);
 
-    // data transfer object (object that will contain the processed request)
-    let dto: CreateUserDTO;
-
-    // process and validate the body of the request (see user.dto.ts)
-    dto = new CreateUserDTO(req.body);
+    // req.body has already been validated and sanitized by
+    // validateBody(CreateUserDTO) in auth.route.ts
+    const dto = req.body;
     console.log("register: dto = ", dto);
 
-    /*
     // Create the user via the service layer.
-    // createUser returns a the newly created user MongoDB document and its jwt token
-    const { user, token } = await userService.createUser(dto);
-
-    // send response
-    return res.status(201).json({
-      success: true,
-      msg: "User successfully registered.",
-      user: user,
-      token,
-    }); 
-    */
-
     const { user } = await userService.createUser(dto);
 
     // Ensure hashed password is never returned to the client
@@ -80,10 +59,11 @@ export const register = asyncHandler(
 // log a user in
 export const login = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const dto = new LoginDTO(req.body);
+    // req.body has already been validated and normalized by validateBody(LoginDTO)
+    const { email, password } = req.body;
 
     // look up user by email (includePassword = true)
-    const user = await userService.getUserByEmail(dto.email, true);
+    const user = await userService.getUserByEmail(email, true);
 
     // invalid credentials (best practice not to reveal whether email exists)
     if (user === null) {
@@ -94,7 +74,7 @@ export const login = asyncHandler(
     }
 
     // check to see if the password matches
-    const isMatch = await user.matchPassword(dto.password);
+    const isMatch = await user.matchPassword(password);
 
     // password in the request does not match the password that is
     // stored with the user with the specified email
@@ -107,18 +87,6 @@ export const login = asyncHandler(
 
     // Ensure that the password is NOT returned to the client
     (user as any).password = undefined;
-    /*
-    // user entered valid credential so generate token
-    const token = user.getSignedJwtToken();
-
-    // send response
-    return res.status(200).json({
-      success: true,
-      msg: "Login successful.",
-      user,
-      token,
-    });
-    */
 
     sendTokenResponse(user, 200, res);
   }
@@ -127,17 +95,6 @@ export const login = asyncHandler(
 // Logs the user out by clearing the auth cookie
 export const logout = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
-    /*
-    // Overwrite the existing JWT cookie with a dummy value
-    // and set a very short expiration so the browser removes it
-    res.cookie("token", "none", {
-      // expire in 10 seconds
-      expires: new Date(Date.now() + 10 * 1000),
-      // prevents client-side JS from accessing the cookie
-      httpOnly: true,
-    });
-    */
-
     res.cookie("token", "none", {
       // Expire the cookie immediately so the browser removes it
       expires: new Date(Date.now() + 10 * 1000),
@@ -177,26 +134,8 @@ export const getMe = asyncHandler(
 // Patch request for updating a user's name & email
 export const updateDetails = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
-    /*
-    // Makes no sense to call this function if neither the user's name or email is getting updated
-    if (!req.body.name && !req.body.email) {
-      return res.status(400).json({
-        success: false,
-        error: "Must add a name, email, or both to be updated",
-      });
-    }
-
-    // Build update object dynamically
-    const fieldsToUpdate: { name?: string; email?: string } = {};
-
-    // if a name is in the body, update it
-    if (req.body.name) fieldsToUpdate.name = req.body.name;
-    // if an email is in the body, update it
-    if (req.body.email) fieldsToUpdate.email = req.body.email;
-    */
-
-    // Process and validate the request body through the UpdateUserDTO
-    const dto = new UpdateUserDTO(req.body);
+    // req.body has already been validated by validateBody(UpdateUserDTO) in auth.route.ts
+    const dto = req.body;
 
     if (!req.user) {
       return res.status(401).json({
@@ -231,19 +170,8 @@ export const updatePassword = asyncHandler(
       });
     }
 
-    if (!req.body.currentPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter your current password",
-      });
-    }
-
-    if (!req.body.newPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "Add a new password",
-      });
-    }
+    // req.body has already been validated by validateBody(UpdatePasswordDTO) in auth.route.ts
+    const { currentPassword, newPassword } = req.body;
 
     // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
     const user = await userService.getUserByIdWithPassword(req.user.id);
@@ -258,7 +186,7 @@ export const updatePassword = asyncHandler(
     // check if the (hashed) current password from the request body matches the (hashed) password in the database
     // if they don't match, then the password will not be updated
 
-    if (!(await user.matchPassword(req.body.currentPassword))) {
+    if (!(await user.matchPassword(currentPassword))) {
       return res.status(401).json({
         success: false,
         error: "Password is incorrect",
@@ -267,7 +195,7 @@ export const updatePassword = asyncHandler(
 
     const updatedUser = await userService.updatePasswordById(
       user._id.toString(),
-      req.body.newPassword
+      newPassword
     );
 
     if (!updatedUser) {
@@ -278,25 +206,21 @@ export const updatePassword = asyncHandler(
     }
 
     sendTokenResponse(updatedUser, 200, res);
-
-    // res.status(200).json({
-    //   success: true,
-    //   data: updatedUser,
-    // });
   }
 );
 
 // function that allows a user to creat a new password
 export const forgotPassword = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
-    const dto = new ForgotPasswordDTO(req.body);
+    // req.body has already been validated by validateBody(ForgotPasswordDTO) in auth.route.ts
+    const { email } = req.body;
 
-    const user = await userService.getUserByEmail(dto.email, false);
+    const user = await userService.getUserByEmail(email, false);
 
     if (user === null) {
       return res.status(404).json({
         success: false,
-        error: `User with email = ${dto.email} not found`,
+        error: `User with email = ${email} not found`,
       });
     }
 
@@ -407,54 +331,12 @@ export const resetPassword = asyncHandler(
     await userService.clearPasswordResetFields(user._id.toString());
 
     sendTokenResponse(updatedUser, 200, res);
-
-    // res.status(200).json({
-    //   success: true,
-    //   data: user,
-    // });
   }
 );
 
 // Retrieve token from model, create cookie and send response
 // Helper function to generate a JWT, set it in an HTTP-only cookie,
 // and send a standardized auth response back to the client
-/*
-const sendTokenResponse = (
-  user: UserDocument,
-  statusCode: number,
-  res: Response
-) => {
-  // Call the instance method on the user model to create a signed JWT
-  const token = user.getSignedJwtToken();
-
-  // Cookie configuration options
-  const options: {
-    expires: Date;
-    httpOnly: boolean;
-    secure?: boolean;
-  } = {
-    // Set cookie expiration based on env variable (in days)
-    expires: new Date(
-      Date.now() +
-        (Number(process.env.JWT_COOKIE_EXPIRES_IN) || 1) * 24 * 60 * 60 * 1000
-    ),
-
-    // Prevent client-side JavaScript from accessing the cookie (mitigates XSS attacks)
-    httpOnly: true,
-  };
-
-  // Ensure cookies are only sent over HTTPS in production
-  if (process.env.NODE_ENV === "production") {
-    options.secure = true;
-  }
-
-  // Send response with JWT stored in cookie and included in JSON body
-  res.status(statusCode).cookie("token", token, options).json({
-    success: true,
-    token,
-  });
-};
-*/
 
 const sendTokenResponse = (
   user: UserDocument,
