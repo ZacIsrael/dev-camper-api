@@ -126,10 +126,13 @@ export const validateBody =
   <T>(validator: DTOConstructor<T> | ValidatorFunction<T>) =>
   (req: Request, res: Response, next: NextFunction): void => {
     try {
+      // Run raw request body through validation (DTO or function)
       const validatedBody = runValidation(validator, req.body);
+      // If valid, replace req.body with sanitized version
       req.body = validatedBody;
       next();
     } catch (error) {
+      // If raw request body is invalid, send 400 response and stop execution
       const message =
         error instanceof Error ? error.message : "Invalid request body";
 
@@ -154,6 +157,7 @@ export const validateParams =
   <T>(validator: DTOConstructor<T> | ValidatorFunction<T>) =>
   (req: Request, res: Response, next: NextFunction): void => {
     try {
+      // Validates whether or not request parameters are in the correct format
       const validatedParams = runValidation(validator, req.params);
       req.params = validatedParams as Request["params"];
       next();
