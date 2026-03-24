@@ -207,3 +207,33 @@ export class UpdateUserDTO {
     }
   }
 }
+
+// DTO that allows a user to update their password
+export class UpdatePasswordDTO {
+  currentPassword: string;
+  newPassword: string;
+
+  constructor(data: unknown) {
+    // Ensure that the data passed in is an object
+    const payload = assertIsObject(data);
+
+    rejectUnknownFields(payload, ["currentPassword", "newPassword"]);
+
+    // Destructure payload 
+    const { currentPassword, newPassword } = payload;
+
+    if (typeof currentPassword !== "string" || currentPassword.trim() === "") {
+      throw new Error("Current password is required");
+    }
+
+    // Ensure that the newPassword is of valid password format 
+    if (!isValidPassword(newPassword)) {
+      throw new Error(
+        "New password must be between 8 and 128 characters"
+      );
+    }
+
+    this.currentPassword = currentPassword;
+    this.newPassword = newPassword;
+  }
+}
