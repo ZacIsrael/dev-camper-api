@@ -131,32 +131,21 @@ app.use(
 // communicate with this API
 // app.use(cors());
 
+// If I had a frontend app to connect to this api,
+// this is how it would be done:
+
+// Specifies which client origins are allowed to send requests
+// to this API and enables cookies / auth headers to be included
+// in cross-origin requests.
 // Prevents random websites from hitting the API
 app.use(
   cors({
     // frontend url goes here
     origin: ["http://localhost:3000"],
+    // allow cookies and Authorization headers
     credentials: true,
   })
 );
-/*
- 
-// If I had a frontend app to connect to this api, 
-// this is how it would be done:
-
-// Specifies which client origins are allowed to send requests 
-// to this API and enables cookies / auth headers to be included 
-// in cross-origin requests.
-*/
-
-// app.use(
-//   cors({
-//     // frontend app URL(s)
-//     origin: ["http://localhost:3000"],
-//     // allow cookies and Authorization headers
-//     credentials: true,
-//   })
-// );
 
 // app.use(logger);
 
@@ -164,7 +153,11 @@ app.use(
 app.use(limiter);
 
 // Enable JSON body parsing for incoming requests
-app.use(express.json());
+// and reject oversized payloads early. 
+app.use(express.json({ limit: "10kb" }));
+
+// Parse URL-encoded form bodies and reject oversized payloads early.
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 // Middleware that parses cookies from incoming HTTP requests
 // and makes them available on req.cookies
