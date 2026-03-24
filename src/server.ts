@@ -153,7 +153,7 @@ app.use(
 app.use(limiter);
 
 // Enable JSON body parsing for incoming requests
-// and reject oversized payloads early. 
+// and reject oversized payloads early.
 app.use(express.json({ limit: "10kb" }));
 
 // Parse URL-encoded form bodies and reject oversized payloads early.
@@ -195,8 +195,14 @@ app.use(
     // Strip unsafe characters from filenames
     safeFileNames: true,
 
+    // Message sent if the file is too large
+    responseOnLimit: "File size limit exceeded",
+
     // Preserve file extensions while sanitizing names
     preserveExtension: true,
+
+    // if necessary, create an upload foldder
+    createParentPath: true,
   })
 );
 
