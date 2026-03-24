@@ -11,33 +11,48 @@ import {
   updatePassword,
   logout,
 } from "../controllers/auth.controller.js";
-import { addCourse, getCourses } from "../controllers/courses.controller.js";
+
+import {
+  CreateUserDTO,
+  ForgotPasswordDTO,
+  LoginDTO,
+  UpdatePasswordDTO,
+  UpdateUserDTO,
+} from "../dtos/user.dto.js";
+import { validateBody } from "../middleware/validate.middleware.js";
 
 import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 // Register a user
-router.post("/register", register);
-// User can login
-router.post("/login", login);
+router.post("/register", validateBody(CreateUserDTO), register);
 
-// log a user out
+// User can login
+router.post("/login", validateBody(LoginDTO), login);
+
+// Log a user out
 router.post("/logout", logout);
 
 // Retrieves the user that's currently logged in
 router.get("/me", protect, getMe);
 
-// Executed when a user click "Forgot password" on the frontend
-router.post("/forgotpassword", forgotPassword);
+// Executed when a user clicks "Forgot password" on the frontend
+router.post("/forgotpassword", validateBody(ForgotPasswordDTO), forgotPassword);
 
 // Executed when a user resets their password
 router.patch("/resetpassword/:resettoken", resetPassword);
 
 // Executed when a user wants to update their name and/or email
-router.patch("/updatedetails", protect, updateDetails);
+router.patch("/updatedetails", protect, validateBody(UpdateUserDTO), updateDetails);
 
 // Executed when a user wants to update their password
-router.patch("/updatepassword", protect, updatePassword);
+router.patch(
+  "/updatepassword",
+  protect,
+  validateBody(UpdatePasswordDTO),
+  updatePassword
+);
+
 
 export default router;
