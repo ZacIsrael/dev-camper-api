@@ -15,86 +15,87 @@
 
 */
 
+import {
+  isAllowedEnumValue,
+  isValidEmail,
+  isValidPassword,
+  rejectUnknownFields,
+} from "../utils/validation.js";
 import { isNonEmptyString, sanitizePlainText } from "../utils/helpers.js";
 
-// Regex used to validate email format (matches mongoose schema)
-// const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// A user can also be an "admin" BUT that will not be allowed via
+// public regostration.
+const PUBLIC_USER_ROLES = ["user", "publisher"] as const;
 
-// Use strict email regex to allow only safe characters and prevent XSS/script injection
-const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+// Utility to ensure incoming DTO data is a plain object before destructuring.
+const assertIsObject = (data: unknown): Record<string, unknown> => {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    throw new Error("Request data must be a valid object");
+  }
+
+  return data as Record<string, unknown>;
+};
 
 // DTO representing the expected request body for creating a User
 // Enforces the same constraints defined in the mongoose schema
 export class CreateUserDTO {
   name: string;
   email: string;
-  role?: "user" | "publisher" | "admin";
+  role?: (typeof PUBLIC_USER_ROLES)[number];
   password: string;
 
-  // Constructor receives raw request body data
-  // Uses Partial to allow missing optional fields
-  constructor(data: Partial<CreateUserDTO>) {
+  constructor(data: unknown) {
+    // ensure that data is an object
+    const payload = assertIsObject(data);
+    // Only allow exact fields expected for PUBLIC registration
+    rejectUnknownFields(data, ["name", "email", "role", "password"]);
+    const { name, email, role, password } = payload;
     // Validate presence and format of name
-    if (!isNonEmptyString(data.name)) {
-      throw new Error("Please add a name");
+    if (!isNonEmptyString(name)) {
+      throw new Error("Name field is required and must be a non-empty string.");
     }
 
-    // Trim name to remove extra whitespace
-    // const name = data.name.trim();
-
     // Sanitize user-provided name input to strip malicious HTML/JS (XSS prevention)
-    const name = sanitizePlainText(data.name);
+    const sanitizedName = sanitizePlainText(name.trim());
 
     // Enforce max length defined in schema
-    if (name.length > 50) {
+    if (sanitizedName.length > 50) {
       throw new Error("Name can't be longer than 50 characters");
     }
 
     // Assign validated name to DTO
-    this.name = name;
+    this.name = sanitizedName;
 
-    if (!isNonEmptyString(data.email)) {
-      throw new Error("Email must be a non-empty string");
+    // Ensure that the email passed in is valid
+    if (!isValidEmail(email)) {
+      throw new Error("A Valid email is required");
     }
 
-    // Trim email
-    const email = data.email.trim();
-
-    // Enforce email regex from schema
-    if (!EMAIL_REGEX.test(email)) {
-      throw new Error("Please add a valid email");
-    }
+    // Trim email and make it lowercase (entries in the database need to be consistent)
+    const normalizedEmail = email.trim().toLocaleLowerCase();
 
     // Assign validated email
-    this.email = email;
+    this.email = normalizedEmail;
 
     // If role is provided, validate it
-    if (data.role !== undefined) {
-      if (!isNonEmptyString(data.role)) {
-        throw new Error(
-          'If provided, role must be a non-empty string: "user" or "publisher"'
-        );
+    if (role !== undefined) {
+      if (!isAllowedEnumValue(role, PUBLIC_USER_ROLES)) {
+        throw new Error("Role must be either 'user' or 'publisher'");
       }
 
-      if (
-        data.role !== "user" &&
-        data.role !== "publisher" &&
-        data.role !== "admin"
-      ) {
-        throw new Error(
-          'Please add a valid role for the user: "user", "admin", or "publisher"'
-        );
-      }
-
-      // Assign validated role
-      this.role = data.role;
+      this.role = role;
+    } else {
+      // if no role is passed in the request body, the default is "user"
+      this.role = "user";
     }
 
-    if (!isNonEmptyString(data.password)) {
-      throw new Error("Please enter a password");
+    // Validate password.
+    if (!isValidPassword(password)) {
+      throw new Error("Password must be between 8 and 128 characters");
     }
 
-    this.password = data.password;
+    // Assign password
+    this.password = password;
   }
 }
 
@@ -103,26 +104,34 @@ export class LoginDTO {
   email: string;
   password: string;
 
-  constructor(data: any) {
-    if (!isNonEmptyString(data.email)) {
-      throw new Error("Email must be a non-empty string");
+  constructor(data: unknown) {
+    // ensure that data parameter is an object
+    const payload = assertIsObject(data);
+
+    // Only allow login credentials.
+    rejectUnknownFields(payload, ["email", "password"]);
+
+    // Destructure payload object
+    const { email, password } = payload;
+
+    // Validate email.
+    if (!isValidEmail(email)) {
+      throw new Error("A valid email address is required");
     }
 
-    // Trim email
-    const email = data.email.trim();
-
-    // Enforce email regex from schema
-    if (!EMAIL_REGEX.test(email)) {
-      throw new Error("Please add a valid email");
-    }
+    // Trim email and make it lowercase (entries in the database need to be consistent)
+    const normalizedEmail = email.trim().toLowerCase();
 
     // Assign validated email
-    this.email = email;
+    this.email = normalizedEmail;
 
-    if (!isNonEmptyString(data.password)) {
-      throw new Error("Please provide a password");
+    // Validate password presence/shape.
+    if (typeof password !== "string" || password.trim().length === 0) {
+      throw new Error("Password is required");
     }
-    this.password = data.password;
+
+    // Assign password
+    this.password = password;
   }
 }
 
@@ -130,21 +139,23 @@ export class LoginDTO {
 export class ForgotPasswordDTO {
   email: string;
 
-  constructor(data: any) {
-    if (!isNonEmptyString(data.email)) {
-      throw new Error("Email must be a non-empty string");
+  constructor(data: unknown) {
+    // Ensure that the data parameter is a valid object
+    const payload = assertIsObject(data);
+
+    // Only allow email for forgot-password requests.
+    rejectUnknownFields(payload, ["email"]);
+
+    // Destructure payload object
+    const { email } = payload;
+
+    // Validate email
+    if (!isValidEmail(email)) {
+      throw new Error("A valid email address is required");
     }
 
-    // Trim email
-    const email = data.email.trim();
-
-    // Enforce email regex from schema
-    if (!EMAIL_REGEX.test(email)) {
-      throw new Error("Please add a valid email");
-    }
-
-    // Assign validated email
-    this.email = email;
+    // Assign trimmed & lowercased validated email; entries in the database need to be consistent
+    this.email = email.trim().toLowerCase();
   }
 }
 
@@ -154,46 +165,45 @@ export class UpdateUserDTO {
   name?: string;
   password?: string;
 
-  constructor(data: any) {
-    if (
-      data.email === undefined &&
-      data.name === undefined &&
-      data.password === undefined
-    ) {
+  constructor(data: unknown) {
+    // Ensure that the data parameter is a valid object
+    const payload = assertIsObject(data);
+
+    // Only allow fields users are permitted to update here.
+    rejectUnknownFields(payload, ["name", "email"]);
+
+    // Destructure obejct
+    const { name, email } = payload;
+    if (email === undefined && name === undefined) {
       throw new Error(
-        "At least one of the following fields must be updated: name, email, password"
+        "At least one of the following fields must be updated: name, email"
       );
     }
-    if (data.email !== undefined) {
-      if (!isNonEmptyString(data.email)) {
-        throw new Error("Email must be a non-empty string");
+    if (email !== undefined) {
+      // Ensure that the email passed in is valid
+      if (!isValidEmail(email)) {
+        throw new Error("A valid email address is required");
       }
 
-      // Trim email
-      const email = data.email.trim();
-
-      // Enforce email regex from schema
-      if (!EMAIL_REGEX.test(email)) {
-        throw new Error("Please add a valid email");
-      }
-
-      // Assign validated email
-      this.email = email;
+      // Assign trimmed & lowercased validated email; entries in the database need to be consistent
+      this.email = email.trim().toLowerCase();
     }
 
-    if (data.name !== undefined) {
-      if (!isNonEmptyString(data.name)) {
-        throw new Error("Please provide a name");
+    if (name !== undefined) {
+      if (!isNonEmptyString(name)) {
+        throw new Error("Name must be a non-empty string");
       }
+
       // Sanitize user-provided name input to strip malicious HTML/JS (XSS prevention)
-      this.name = sanitizePlainText(data.name);
-    }
+      const sanitizedName = sanitizePlainText(name.trim());
 
-    if (data.password !== undefined) {
-      if (!isNonEmptyString(data.password)) {
-        throw new Error("Please provide a password");
+      // Enforce max length defined in schema
+      if (sanitizedName.length > 50) {
+        throw new Error("Name must be less than 50 characters");
       }
-      this.password = data.password;
+
+      // Assign validated name to DTO
+      this.name = sanitizedName;
     }
   }
 }
