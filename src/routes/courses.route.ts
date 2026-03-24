@@ -8,6 +8,8 @@ import {
   updateCourse,
 } from "../controllers/courses.controller.js";
 
+import { validateParams } from "../middleware/validate.middleware.js";
+import { IdParamDTO } from "../dtos/params.dto.js";
 import { protect, authorize } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -16,12 +18,24 @@ const router = express.Router();
 router.get("/", getCourses);
 
 // Get course by id
-router.get("/:id", getCourseById);
+router.get("/:id", validateParams(IdParamDTO), getCourseById);
 
 // Update a course
-router.patch("/:id", protect, authorize("publisher", "admin"), updateCourse);
+router.patch(
+  "/:id",
+  validateParams(IdParamDTO),
+  protect,
+  authorize("publisher", "admin"),
+  updateCourse
+);
 
 // Delete a course
-router.delete("/:id", protect, authorize("publisher", "admin"), deleteCourse);
+router.delete(
+  "/:id",
+  validateParams(IdParamDTO),
+  protect,
+  authorize("publisher", "admin"),
+  deleteCourse
+);
 
 export default router;
