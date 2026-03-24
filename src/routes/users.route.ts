@@ -9,6 +9,8 @@ import {
   getUserById,
   updateUser,
 } from "../controllers/users.controller.js";
+import { IdParamDTO } from "../dtos/params.dto.js";
+import { validateParams } from "../middleware/validate.middleware.js";
 import { authorize, protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -20,12 +22,30 @@ router.get("/", protect, authorize("admin"), getAllUsers);
 router.post("/", protect, authorize("admin"), createUser);
 
 // Get user by id
-router.get("/:id", protect, authorize("admin"), getUserById);
+router.get(
+  "/:id",
+  validateParams(IdParamDTO),
+  protect,
+  authorize("admin"),
+  getUserById
+);
 
 // Update a user
-router.patch("/:id", protect, authorize("admin"), updateUser);
+router.patch(
+  "/:id",
+  validateParams(IdParamDTO),
+  protect,
+  authorize("admin"),
+  updateUser
+);
 
 // Delete a user
-router.delete("/:id", protect, authorize("admin"), deleteUser);
+router.delete(
+  "/:id",
+  validateParams(IdParamDTO),
+  protect,
+  authorize("admin"),
+  deleteUser
+);
 
 export default router;
