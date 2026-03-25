@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import { geocoder } from "../utils/geocoder.js";
 import { Bootcamp } from "../models/bootcamp.model.js";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 // Only allow files with the following extensions to be uploaded
 // for bootcamp photos
@@ -195,26 +196,16 @@ export const getBootcamps = asyncHandler(
 
 export const getBootcampById = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // id is already validated prior to this function being called
+    // via middleware (see bootcamp route file)
     const { id } = req.params;
-
-    //   400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid bootcamp id: ${id}`,
-      });
-    }
 
     // retrieve bootcamp with given id using bootcamp service
     const bootcamp = await bootcampService.getBootcampById(id);
 
     // 404: not found
     if (!bootcamp) {
-      // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Bootcamp with id ${id} not found`, 404);
     }
 
     return res.status(200).json({
@@ -298,10 +289,10 @@ export const addBootcamp = asyncHandler(
     // If the logged in user has already uploaded a bootcamp and they are NOT an admin,
     // throw an error because if a user is NOT an admin, then they can only upload 1 bootcamp.
     if (bootcamps.length > 0 && req.user.role !== "admin") {
-      return res.status(400).json({
-        success: false,
-        error: `User with id ${req.user.id} has already published a bootcamp`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} has already published a bootcamp`,
+        400
+      );
     }
 
     // data transfer object (object that will contained the processed request)
@@ -323,16 +314,9 @@ export const addBootcamp = asyncHandler(
 export const updateBootcamp = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     // obtain the bootcamp's id from the route parameter
+    // id is already validated via middleware function called in bootcamps route file
     const { id } = req.params;
     const { body } = req;
-
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid bootcamp id: ${id}`,
-      });
-    }
 
     // Ensure that the user making this request is the owner of the bootcamp
     let bootcamp = await bootcampService.getBootcampById(id);
@@ -340,29 +324,26 @@ export const updateBootcamp = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: `Bootcamp can't be updated; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        "Bootcamp can't be updated; no user is logged in",
+        401
+      );
     }
     // 404: not found
     if (!bootcamp) {
-      // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Bootcamp with id ${id} not found`, 404);
     }
+
     // Admins are the only people aside from the bootcamp's owner that can make changes to a bootcamp
     if (
       bootcamp.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
     ) {
       // The user making this request is not owner of this bootcamp
-      return res.status(403).json({
-        success: false,
-        error: `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
+        403
+      );
     }
 
     // use service to update a bootcamp
@@ -371,10 +352,9 @@ export const updateBootcamp = asyncHandler(
     // 404: not found
     if (!bootcamp) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      if (!bootcamp) {
+        throw new ErrorResponse(`Bootcamp with id ${id} not found`, 404);
+      }
     }
 
     // send response to route
@@ -406,15 +386,8 @@ export const replaceBootcamp = async (
 export const deleteBootcamp = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     // obtain the bootcamp's id from the route parameter
+    // id is validated through middleware function called in bootcamps route file
     const { id } = req.params;
-
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid bootcamp id: ${id}`,
-      });
-    }
 
     // Ensure that the user making this request is the owner of the bootcamp
     let deleted = await bootcampService.getBootcampById(id);
@@ -422,18 +395,15 @@ export const deleteBootcamp = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: `Bootcamp can't be deleted; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        "Bootcamp can't be deleted; no user is logged in",
+        401
+      );
     }
     // 404: not found
     if (!deleted) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Bootcamp with id ${id} not found`, 404);
     }
     // Admins are the only people aside from the bootcamp's owner that can delete a bootcamp
     if (
@@ -441,24 +411,14 @@ export const deleteBootcamp = asyncHandler(
       req.user.role !== "admin"
     ) {
       // The user making this request is not owner of this bootcamp
-      return res.status(403).json({
-        success: false,
-        error: `User with id ${req.user.id} can't delete bootcamp with id ${id} because they are not the owner.`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} can't delete bootcamp with id ${id} because they are not the owner.`,
+        403
+      );
     }
 
     // use service to delete a bootcamp
     deleted = await bootcampService.deleteBootcampById(id);
-
-    // Redundant
-    // 404: not found
-    if (!deleted) {
-      // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
-    }
 
     // send repsonse to route
     res.status(204).json({
@@ -479,24 +439,13 @@ export const uploadBootcampPhoto = asyncHandler(
     // retrieve uploaded file(s)
     const { files } = req;
 
-    //   400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid bootcamp id: ${id}`,
-      });
-    }
-
     // retrieve bootcamp with given id using bootcamp service
     let bootcamp = await bootcampService.getBootcampById(id);
 
     // 404: not found
     if (!bootcamp) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Bootcamp with id ${id} not found`, 404);
     }
 
     // Ensure that the user making this request is the owner of the bootcamp
@@ -505,18 +454,15 @@ export const uploadBootcampPhoto = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: `Bootcamp can't be updated; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        "Bootcamp can't be updated; no user is logged in",
+        401
+      );
     }
     // 404: not found
     if (!bootcamp) {
       // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Bootcamp with id ${id} not found`, 404);
     }
     // Admins are the only people aside from the bootcamp's owner that can make changes to a bootcamp
     if (
@@ -524,31 +470,26 @@ export const uploadBootcampPhoto = asyncHandler(
       req.user.role !== "admin"
     ) {
       // The user making this request is not owner of this bootcamp
-      return res.status(403).json({
-        success: false,
-        error: `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} can't update bootcamp with id ${id} because they are not the owner.`,
+        403
+      );
     }
 
     // a file was not uploaded
     if (files === undefined || files === null) {
-      return res.status(400).json({
-        success: false,
-        error: "Please upload a file",
-      });
+      throw new ErrorResponse("Please upload a file", 400);
     }
 
     const file = files.file;
 
     // extra null check; a file was not uploaded
     if (file === undefined || file === null) {
-      return res.status(400).json({
-        success: false,
-        error: "Please upload a file",
-      });
+      throw new ErrorResponse("Please upload a file", 400);
     }
     // a file was uploaded
-    console.log("controller(uploadBootcampPhoto): File = ", file);
+    // debugging
+    // console.log("controller(uploadBootcampPhoto): File = ", file);
     /*
 
     Structure of req.files.file:
@@ -570,47 +511,35 @@ export const uploadBootcampPhoto = asyncHandler(
     // User uploaded multiple files when they should've
     // only uploaded 1 image for this function
     if (Array.isArray(file)) {
-      return res.status(400).json({
-        success: false,
-        error: "Please only upload 1 file",
-      });
+      throw new ErrorResponse("Please only upload 1 file", 400);
     }
 
     const fileExtension = path.extname(file.name).toLowerCase();
 
-    // Ensure that the file uploaded is a photo
-    // if (!file.mimetype.startsWith("image")) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     error: "Please upload a valid photo",
-    //   });
-    // }
-
     // Validate MIME type against strict allowlist to block unsafe formats (e.g., SVG, HTML)
     if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.mimetype)) {
-      return res.status(400).json({
-        success: false,
-        error: "Please upload a valid image file (jpg, jpeg, png, or webp)",
-      });
+      throw new ErrorResponse(
+        "Please upload a valid image file (jpg, jpeg, png, or webp)",
+        400
+      );
     }
 
     // Validate file extension to ensure only safe image types are accepted (defense-in-depth)
     if (!ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension)) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "Please upload a valid image extension (jpg, jpeg, png, or webp)",
-      });
+      throw new ErrorResponse(
+        "Please upload a valid image extension (jpg, jpeg, png, or webp)",
+        400
+      );
     }
 
     // Max size an uploaded file can be
     const maxSize = Number(process.env.MAX_FILE_UPLOAD) || 3000000;
     // Check file size
     if (file.size > maxSize) {
-      return res.status(400).json({
-        success: false,
-        error: `Please upload a photo that is ${maxSize} bytes or less`,
-      });
+      throw new ErrorResponse(
+        `Please upload a photo that is ${maxSize} bytes or less`,
+        400
+      );
     }
 
     // Create custom file name
@@ -627,7 +556,6 @@ export const uploadBootcampPhoto = asyncHandler(
         return res.status(500).json({
           success: false,
           error: `Issue with file upload`,
-          err,
         });
       }
 
@@ -645,4 +573,3 @@ export const uploadBootcampPhoto = asyncHandler(
     });
   }
 );
-
