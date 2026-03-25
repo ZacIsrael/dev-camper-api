@@ -10,13 +10,23 @@ import {
   updateUser,
 } from "../controllers/users.controller.js";
 import { IdParamDTO } from "../dtos/params.dto.js";
-import { validateParams } from "../middleware/validate.middleware.js";
+import {
+  validateParams,
+  validateQuery,
+} from "../middleware/validate.middleware.js";
 import { authorize, protect } from "../middleware/auth.middleware.js";
+import { UserQueryDTO } from "../dtos/query.dto.js";
 
 const router = express.Router();
 
 // Get all users
-router.get("/", protect, authorize("admin"), getAllUsers);
+router.get(
+  "/",
+  validateQuery(UserQueryDTO),
+  protect,
+  authorize("admin"),
+  getAllUsers
+);
 
 // Create a user
 router.post("/", protect, authorize("admin"), createUser);
