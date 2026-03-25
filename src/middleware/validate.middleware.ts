@@ -66,7 +66,6 @@ type DTOConstructor<T> = new (data: unknown) => T;
  */
 type ValidatorFunction<T> = (data: unknown) => T;
 
-
 // Type guard that tells TypeScript whether the validator
 // should be treated like a class constructor.
 // Why this is needed:
@@ -104,9 +103,11 @@ const runValidation = <T>(
   data: unknown
 ): T => {
   if (isDTOConstructor(validator)) {
+    // instantiate the class
     return new validator(data);
   }
 
+  // call the function
   return validator(data);
 };
 
@@ -187,7 +188,15 @@ export const validateQuery =
   (req: Request, res: Response, next: NextFunction): void => {
     try {
       const validatedQuery = runValidation(validator, req.query);
-      req.query = validatedQuery as Request["query"];
+
+      // Clear the existing query object, then copy the validated values onto it.
+      // req.query is getter-based, so mutate it instead of reassigning it.
+      Object.keys(req.query).forEach((key) => {
+        delete (req.query as Record<string, unknown>)[key];
+      });
+
+      Object.assign(req.query as Record<string, unknown>, validatedQuery);
+
       next();
     } catch (error) {
       const message =
