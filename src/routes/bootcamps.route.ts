@@ -12,7 +12,12 @@ import {
   uploadBootcampPhoto,
 } from "../controllers/bootcamps.controller.js";
 
-import { validateParams } from "../middleware/validate.middleware.js";
+import {
+  validateQuery,
+  validateParams,
+} from "../middleware/validate.middleware.js";
+import { BootcampQueryDTO } from "../dtos/query.dto.js";
+
 import { IdParamDTO, BootcampIdParamDTO } from "../dtos/params.dto.js";
 
 import { addCourse, getCourses } from "../controllers/courses.controller.js";
@@ -23,7 +28,7 @@ import { addReview, getReviews } from "../controllers/reviews.controller.js";
 const router = express.Router();
 
 // Get all bootcamps
-router.get("/", getBootcamps);
+router.get("/", validateQuery(BootcampQueryDTO), getBootcamps);
 
 // Get all bootcamps within a certain distance (mile radius) of a zipcode
 router.get("/radius/:zipcode/:distance", getBootcampsWithinARadius);
@@ -65,7 +70,13 @@ router.post(
 router.post("/", protect, authorize("publisher", "admin"), addBootcamp);
 
 // Replace a bootcamp
-router.put("/:id", validateParams(IdParamDTO), protect, authorize("publisher", "admin"), replaceBootcamp);
+router.put(
+  "/:id",
+  validateParams(IdParamDTO),
+  protect,
+  authorize("publisher", "admin"),
+  replaceBootcamp
+);
 
 // Update a bootcamp
 router.patch(
