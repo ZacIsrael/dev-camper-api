@@ -1,13 +1,6 @@
+import { assertIsObject } from "../utils/helpers.js";
 import { isValidObjectId, rejectUnknownFields } from "../utils/validation.js";
 
-// Ensures the incoming DTO payload is a plain object before destructuring.
-const assertIsObject = (data: unknown): Record<string, unknown> => {
-  if (typeof data !== "object" || data === null || Array.isArray(data)) {
-    throw new Error("Request params must be a valid object");
-  }
-
-  return data as Record<string, unknown>;
-};
 
 // Generic :id validator (for MongoDB)
 // For routes like /bootcamps/:id, /courses/:id, /reviews/:id, /users/:id
@@ -16,7 +9,7 @@ export class IdParamDTO {
   id: string;
 
   constructor(data: unknown) {
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Route params must be a valid object");;
 
     rejectUnknownFields(payload, ["id"]);
 
@@ -43,7 +36,7 @@ export class BootcampIdParamDTO {
 
   constructor(data: unknown) {
     // Ensure that the data passed is an object
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Route params must be a valid object");;
 
     rejectUnknownFields(payload, ["bootcampId"]);
 

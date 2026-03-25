@@ -21,20 +21,15 @@ import {
   isValidPassword,
   rejectUnknownFields,
 } from "../utils/validation.js";
-import { isNonEmptyString, sanitizePlainText } from "../utils/helpers.js";
+import {
+  assertIsObject,
+  isNonEmptyString,
+  sanitizePlainText,
+} from "../utils/helpers.js";
 
 // A user can also be an "admin" BUT that will not be allowed via
 // public regostration.
 const PUBLIC_USER_ROLES = ["user", "publisher"] as const;
-
-// Utility to ensure incoming DTO data is a plain object before destructuring.
-const assertIsObject = (data: unknown): Record<string, unknown> => {
-  if (typeof data !== "object" || data === null || Array.isArray(data)) {
-    throw new Error("Request data must be a valid object");
-  }
-
-  return data as Record<string, unknown>;
-};
 
 // DTO representing the expected request body for creating a User
 // Enforces the same constraints defined in the mongoose schema
@@ -46,7 +41,7 @@ export class CreateUserDTO {
 
   constructor(data: unknown) {
     // ensure that data is an object
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Request body must be a valid object");
     // Only allow exact fields expected for PUBLIC registration
     rejectUnknownFields(data, ["name", "email", "role", "password"]);
     const { name, email, role, password } = payload;
@@ -106,7 +101,7 @@ export class LoginDTO {
 
   constructor(data: unknown) {
     // ensure that data parameter is an object
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Request body must be a valid object");
 
     // Only allow login credentials.
     rejectUnknownFields(payload, ["email", "password"]);
@@ -141,7 +136,7 @@ export class ForgotPasswordDTO {
 
   constructor(data: unknown) {
     // Ensure that the data parameter is a valid object
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Request body must be a valid object");
 
     // Only allow email for forgot-password requests.
     rejectUnknownFields(payload, ["email"]);
@@ -167,7 +162,7 @@ export class UpdateUserDTO {
 
   constructor(data: unknown) {
     // Ensure that the data parameter is a valid object
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Request body must be a valid object");
 
     // Only allow fields users are permitted to update here.
     rejectUnknownFields(payload, ["name", "email"]);
@@ -215,22 +210,20 @@ export class UpdatePasswordDTO {
 
   constructor(data: unknown) {
     // Ensure that the data passed in is an object
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(data, "Request body must be a valid object");
 
     rejectUnknownFields(payload, ["currentPassword", "newPassword"]);
 
-    // Destructure payload 
+    // Destructure payload
     const { currentPassword, newPassword } = payload;
 
     if (typeof currentPassword !== "string" || currentPassword.trim() === "") {
       throw new Error("Current password is required");
     }
 
-    // Ensure that the newPassword is of valid password format 
+    // Ensure that the newPassword is of valid password format
     if (!isValidPassword(newPassword)) {
-      throw new Error(
-        "New password must be between 8 and 128 characters"
-      );
+      throw new Error("New password must be between 8 and 128 characters");
     }
 
     this.currentPassword = currentPassword;

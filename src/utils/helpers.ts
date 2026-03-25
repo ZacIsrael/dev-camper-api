@@ -32,3 +32,14 @@ export const sanitizePlainText = (value: string): string =>
     // Disallow all HTML attributes (removes things like onerror, onclick, etc.)
     allowedAttributes: {},
   });
+
+// Ensures the incoming value is a plain object before destructuring.
+// Prevents invalid types like null, arrays, or primitives from being
+// treated as valid request payloads.
+export const assertIsObject = (data: unknown, errorMessage = "Request data must be a valid object"): Record<string, unknown> => {
+  if (typeof data !== "object" || data === null || Array.isArray(data)) {
+    throw new Error(errorMessage);
+  }
+
+  return data as Record<string, unknown>;
+};

@@ -5,23 +5,13 @@
  * before they reach controllers. Ensures only allowed query fields are processed.
  */
 
+import { assertIsObject } from "../utils/helpers.js";
 import {
   rejectUnknownFields,
   validatePaginationQuery,
   validateSelectFields,
   validateSortFields,
 } from "../utils/validation.js";
-
-/**
- * Ensures the incoming DTO payload is a plain object before destructuring.
- */
-const assertIsObject = (data: unknown): Record<string, unknown> => {
-  if (typeof data !== "object" || data === null || Array.isArray(data)) {
-    throw new Error("Query parameters must be a valid object");
-  }
-
-  return data as Record<string, unknown>;
-};
 
 const BOOTCAMP_QUERY_FIELDS = [
   "name",
@@ -60,7 +50,10 @@ export class BootcampQueryDTO {
   select?: string;
 
   constructor(data: unknown) {
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(
+      data,
+      "Query parameters must be a valid object"
+    );
 
     rejectUnknownFields(payload, ["page", "limit", "sort", "select"]);
 
@@ -93,7 +86,10 @@ export class CourseQueryDTO {
   select?: string;
 
   constructor(data: unknown) {
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(
+      data,
+      "Query parameters must be a valid object"
+    );
 
     rejectUnknownFields(payload, ["page", "limit", "sort", "select"]);
 
@@ -126,7 +122,10 @@ export class ReviewQueryDTO {
   select?: string;
 
   constructor(data: unknown) {
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(
+      data,
+      "Query parameters must be a valid object"
+    );
 
     rejectUnknownFields(payload, ["page", "limit", "sort", "select"]);
 
@@ -159,7 +158,10 @@ export class UserQueryDTO {
   select?: string;
 
   constructor(data: unknown) {
-    const payload = assertIsObject(data);
+    const payload = assertIsObject(
+      data,
+      "Query parameters must be a valid object"
+    );
 
     rejectUnknownFields(payload, ["page", "limit", "sort", "select"]);
 
