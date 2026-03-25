@@ -8,14 +8,18 @@ import {
   updateCourse,
 } from "../controllers/courses.controller.js";
 
-import { validateParams } from "../middleware/validate.middleware.js";
+import {
+  validateParams,
+  validateQuery,
+} from "../middleware/validate.middleware.js";
+import { CourseQueryDTO } from "../dtos/query.dto.js";
 import { IdParamDTO } from "../dtos/params.dto.js";
 import { protect, authorize } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 // Get all courses
-router.get("/", getCourses);
+router.get("/", validateQuery(CourseQueryDTO), getCourses);
 
 // Get course by id
 router.get("/:id", validateParams(IdParamDTO), getCourseById);
