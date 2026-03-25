@@ -1,16 +1,26 @@
-import { Error } from "mongoose";
-
-export class ErrorResponse {
+/**
+ * Custom application error class used to standardize errors across the API.
+ *
+ * Purpose:
+ * - attaches an HTTP status code to an error
+ * - preserves the normal JavaScript Error behavior
+ * - allows controllers/services to throw errors consistently
+ * - works cleanly with the global error-handling middleware
+ */
+export class ErrorResponse extends Error {
   public statusCode: number;
-  public error: Error;
+  public isOperational: boolean;
 
-  constructor(error: Error, statusCode: number) {
-    this.error = error;
+  constructor(message: string, statusCode: number) {
+    super(message);
 
-    // Set the HTTP status code for this custom error
     this.statusCode = statusCode;
+    this.isOperational = true;
 
-    // Restore prototype chain (essential when extending built-ins)
+    // Restore prototype chain so instanceof checks work correctly.
     Object.setPrototypeOf(this, ErrorResponse.prototype);
+
+    // Captures stack trace without including this constructor in it.
+    Error.captureStackTrace(this, this.constructor);
   }
 }
