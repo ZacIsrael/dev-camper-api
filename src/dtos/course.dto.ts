@@ -8,7 +8,6 @@ import {
   isNumber,
   sanitizePlainText,
 } from "../utils/helpers.js";
-import mongoose from "mongoose";
 
 const ALLOWED_MINIMUM_SKILLS = [
   "beginner",
