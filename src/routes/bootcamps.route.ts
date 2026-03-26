@@ -56,7 +56,7 @@ router.get(
 router.post(
   "/:bootcampId/courses",
   validateParams(BootcampIdParamDTO),
-  // validateBody(CreateCourseDTO),
+  validateBody(CreateCourseDTO),
   protect,
   authorize("publisher", "admin"),
   addCourse
