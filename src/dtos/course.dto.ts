@@ -27,7 +27,6 @@ export class CreateCourseDTO {
   tuition: number;
   minimumSkill: MinimumSkill;
   scholarhipsAvailable: boolean;
-  user: mongoose.Types.ObjectId;
 
   constructor(data: unknown) {
     const payload = assertIsObject(data, "Request body must be a valid object");
@@ -84,16 +83,6 @@ export class CreateCourseDTO {
       // Default to false if scholarhipsAvailable is not provided
       this.scholarhipsAvailable = false;
     }
-
-    if (!isNonEmptyString(payload.user)) {
-      throw new Error("Please add a user id");
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(payload.user)) {
-      throw new Error("Please add a valid user id");
-    }
-
-    this.user = new mongoose.Types.ObjectId(payload.user);
   }
 }
 
