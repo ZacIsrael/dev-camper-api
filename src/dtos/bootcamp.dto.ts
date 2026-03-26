@@ -2,11 +2,11 @@
 // before it is used to create a Bootcamp document
 import type { Career } from "../types/career.type.js";
 import {
+  assertIsObject,
   isBoolean,
   isNonEmptyString,
   sanitizePlainText,
 } from "../utils/helpers.js";
-import mongoose from "mongoose";
 
 // Regex used to validate email format (matches mongoose schema)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,9 +36,6 @@ const isCareer = (value: unknown): value is Career => {
 export class CreateBootcampDTO {
   // Bootcamp name (required)
   name: string;
-
-  // user that uploaded the bootcamp
-  user: mongoose.Types.ObjectId;
 
   // Bootcamp description (required)
   description: string;
@@ -70,21 +67,17 @@ export class CreateBootcampDTO {
   // Indicates whether GI Bill is accepted
   acceptGi?: boolean;
 
-  // Constructor receives raw request body data
-  // Uses Partial to allow missing optional fields
-  constructor(data: Partial<CreateBootcampDTO>) {
+  constructor(data: unknown) {
+    const payload = assertIsObject(data, "Request body must be a valid object");
     //  Required data
 
     // Validate presence and format of name
-    if (!isNonEmptyString(data.name)) {
+    if (!isNonEmptyString(payload.name)) {
       throw new Error("Please add a name");
     }
 
-    // Trim name to remove extra whitespace
-    // const name = data.name.trim();
-
     // Sanitize user-provided name input to strip malicious HTML/JS (XSS prevention)
-    const name = sanitizePlainText(data.name);
+    const name = sanitizePlainText(payload.name);
 
     // Enforce max length defined in schema
     if (name.length > 50) {
@@ -94,28 +87,13 @@ export class CreateBootcampDTO {
     // Assign validated name to DTO
     this.name = name;
 
-    if (!isNonEmptyString(data.user)) {
-      throw new Error("Please add a user id");
-    }
-
-    // Check that the data.user is in the proper format of a Mongoose id
-    if (!mongoose.Types.ObjectId.isValid(data.user)) {
-      throw new Error("Please add a valid user id");
-    }
-
-    // Assign validated user to DTO
-    this.user = data.user;
-
     // Validate presence and format of description
-    if (!isNonEmptyString(data.description)) {
+    if (!isNonEmptyString(payload.description)) {
       throw new Error("Please add a description");
     }
 
-    // Trim description to remove extra whitespace
-    // const description = data.description.trim();
-
     // Sanitize user-provided description input to strip malicious HTML/JS (XSS prevention)
-    const description = sanitizePlainText(data.description);
+    const description = sanitizePlainText(payload.description);
 
     // Enforce max length defined in schema
     if (description.length > 165) {
@@ -126,18 +104,15 @@ export class CreateBootcampDTO {
     this.description = description;
 
     // Validate presence of address
-    if (!isNonEmptyString(data.address)) {
+    if (!isNonEmptyString(payload.address)) {
       throw new Error("Please add an address");
     }
 
-    // Trim and assign address
-    // this.address = data.address.trim();
-
     // Sanitize user-provided address input to strip malicious HTML/JS (XSS prevention)
-    this.address = sanitizePlainText(data.address);
+    this.address = sanitizePlainText(payload.address);
 
     // Validate careers array exists and is not empty
-    if (!Array.isArray(data.careers) || data.careers.length === 0) {
+    if (!Array.isArray(payload.careers) || payload.careers.length === 0) {
       throw new Error("Please add at least one career");
     }
 
@@ -145,7 +120,7 @@ export class CreateBootcampDTO {
     const careers: Career[] = [];
 
     // Validate each career value against allowed enum
-    for (const c of data.careers) {
+    for (const c of payload.careers) {
       if (!isCareer(c)) {
         throw new Error(
           `Invalid career: "${String(c)}". Must be one of: ${CAREER_VALUES.join(
@@ -164,13 +139,13 @@ export class CreateBootcampDTO {
     // Optional data
 
     // Validate website if provided
-    if (data.website !== undefined) {
-      if (!isNonEmptyString(data.website)) {
+    if (payload.website !== undefined) {
+      if (!isNonEmptyString(payload.website)) {
         throw new Error("Website must be a non-empty string");
       }
 
       // Trim website URL
-      const website = data.website.trim();
+      const website = payload.website.trim();
 
       // Enforce URL regex from schema
       if (!WEBSITE_REGEX.test(website)) {
@@ -182,13 +157,13 @@ export class CreateBootcampDTO {
     }
 
     // Validate phone number if provided
-    if (data.phone !== undefined) {
-      if (!isNonEmptyString(data.phone)) {
+    if (payload.phone !== undefined) {
+      if (!isNonEmptyString(payload.phone)) {
         throw new Error("Phone must be a non-empty string");
       }
 
       // Trim phone number
-      const phone = data.phone.trim();
+      const phone = payload.phone.trim();
 
       // Enforce max length defined in schema
       if (phone.length > 20) {
@@ -200,13 +175,13 @@ export class CreateBootcampDTO {
     }
 
     // Validate email if provided
-    if (data.email !== undefined) {
-      if (!isNonEmptyString(data.email)) {
+    if (payload.email !== undefined) {
+      if (!isNonEmptyString(payload.email)) {
         throw new Error("Email must be a non-empty string");
       }
 
       // Trim email
-      const email = data.email.trim();
+      const email = payload.email.trim();
 
       // Enforce email regex from schema
       if (!EMAIL_REGEX.test(email)) {
@@ -218,39 +193,39 @@ export class CreateBootcampDTO {
     }
 
     // Validate housing flag if provided
-    if (data.housing !== undefined) {
-      if (!isBoolean(data.housing))
+    if (payload.housing !== undefined) {
+      if (!isBoolean(payload.housing))
         throw new Error("housing must be a boolean");
 
       // Assign validated boolean
-      this.housing = data.housing;
+      this.housing = payload.housing;
     }
 
     // Validate job assistance flag if provided
-    if (data.jobAssistance !== undefined) {
-      if (!isBoolean(data.jobAssistance))
+    if (payload.jobAssistance !== undefined) {
+      if (!isBoolean(payload.jobAssistance))
         throw new Error("jobAssistance must be a boolean");
 
       // Assign validated boolean
-      this.jobAssistance = data.jobAssistance;
+      this.jobAssistance = payload.jobAssistance;
     }
 
     // Validate job guarantee flag if provided
-    if (data.jobGuarantee !== undefined) {
-      if (!isBoolean(data.jobGuarantee))
+    if (payload.jobGuarantee !== undefined) {
+      if (!isBoolean(payload.jobGuarantee))
         throw new Error("jobGuarantee must be a boolean");
 
       // Assign validated boolean
-      this.jobGuarantee = data.jobGuarantee;
+      this.jobGuarantee = payload.jobGuarantee;
     }
 
     // Validate GI Bill acceptance flag if provided
-    if (data.acceptGi !== undefined) {
-      if (!isBoolean(data.acceptGi))
+    if (payload.acceptGi !== undefined) {
+      if (!isBoolean(payload.acceptGi))
         throw new Error("acceptGi must be a boolean");
 
       // Assign validated boolean
-      this.acceptGi = data.acceptGi;
+      this.acceptGi = payload.acceptGi;
     }
   }
 }
