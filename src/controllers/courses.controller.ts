@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { CreateCourseDTO, UpdateCourseDTO } from "../dtos/course.dto.js";
+import { UpdateCourseDTO } from "../dtos/course.dto.js";
 import { courseService } from "../services/course.service.js";
 
 // import mongoose from "mongoose";
@@ -260,16 +260,6 @@ export const addCourse = asyncHandler(
       throw new ErrorResponse("bootcampId must be a non-empty string", 400);
     }
 
-    // 400: invalid ObjectId
-    // This is unnecessary now due to middleware called in
-    // the route that calls this function (bootcamps route file)
-    // if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     error: `Invalid bootcamp id: ${bootcampId}`,
-    //   });
-    // }
-
     // check to see if a bootcamp with _id = bootcampId actually exists
     const bootcamp = await bootcampService.getBootcampById(bootcampId);
 
@@ -292,17 +282,13 @@ export const addCourse = asyncHandler(
       );
     }
 
-    // data transfer object (object that will contain the processed request)
-    let dto: any;
+    req.body.bootcamp = bootcampId;
 
-    // process the body of the request (see course.dto.js)
-    dto = new CreateCourseDTO(req.body);
-    // bootcampId is retrieved from the request parameters; not the body of the request
-    dto.bootcamp = bootcampId;
-    console.log("addCourse: dto = ", dto);
+    console.log('addCourse: req.body = ', req.body)
+   
 
     // use service to add course
-    const course = await courseService.createCourse(dto);
+    const course = await courseService.createCourse(req.body);
     // send response to route
     res
       .status(201)
