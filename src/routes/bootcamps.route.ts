@@ -15,6 +15,7 @@ import {
 import {
   validateQuery,
   validateParams,
+  validateBody,
 } from "../middleware/validate.middleware.js";
 import { BootcampQueryDTO } from "../dtos/query.dto.js";
 
@@ -24,6 +25,7 @@ import { addCourse, getCourses } from "../controllers/courses.controller.js";
 
 import { protect, authorize } from "../middleware/auth.middleware.js";
 import { addReview, getReviews } from "../controllers/reviews.controller.js";
+import { CreateCourseDTO } from "../dtos/course.dto.js";
 
 const router = express.Router();
 
@@ -54,6 +56,7 @@ router.get(
 router.post(
   "/:bootcampId/courses",
   validateParams(BootcampIdParamDTO),
+  // validateBody(CreateCourseDTO),
   protect,
   authorize("publisher", "admin"),
   addCourse
