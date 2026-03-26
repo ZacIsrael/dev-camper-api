@@ -8,9 +8,12 @@ import {
   updateCourse,
 } from "../controllers/courses.controller.js";
 
+import { UpdateCourseDTO } from "../dtos/course.dto.js";
+
 import {
   validateParams,
   validateQuery,
+  validateBody
 } from "../middleware/validate.middleware.js";
 import { CourseQueryDTO } from "../dtos/query.dto.js";
 import { IdParamDTO } from "../dtos/params.dto.js";
@@ -28,6 +31,7 @@ router.get("/:id", validateParams(IdParamDTO), getCourseById);
 router.patch(
   "/:id",
   validateParams(IdParamDTO),
+  // validateBody(UpdateCourseDTO),
   protect,
   authorize("publisher", "admin"),
   updateCourse
