@@ -2,10 +2,9 @@ import type { Request, Response, NextFunction } from "express";
 import { CreateCourseDTO, UpdateCourseDTO } from "../dtos/course.dto.js";
 import { courseService } from "../services/course.service.js";
 
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 import { asyncHandler } from "../middleware/async.middleware.js";
-
-import { Course } from "../models/course.model.js";
+import { ErrorResponse } from "../utils/errorResponse.js";
 import { isNonEmptyString } from "../utils/helpers.js";
 import { bootcampService } from "../services/bootcamp.service.js";
 
@@ -170,18 +169,7 @@ export const getCourses = asyncHandler(
     if (bootcampId !== undefined) {
       // ensure that the bootcamp id is a non-empty string
       if (!isNonEmptyString(bootcampId)) {
-        return res.status(400).json({
-          success: false,
-          error: "bootcampId must be a non-empty string",
-        });
-      }
-
-      //   400: invalid ObjectId
-      if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
-        return res.status(400).json({
-          success: false,
-          error: `Invalid bootcamp id: ${bootcampId}`,
-        });
+        throw new ErrorResponse("bootcampId must be a non-empty string", 400);
       }
 
       // pass the id to the filter: { bootcamp: bootcampId}
@@ -222,26 +210,15 @@ export const getCourses = asyncHandler(
 
 export const getCourseById = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
+    // id is already validated in middleware called in courses route file
     const { id } = req.params;
-
-    //   400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid course id: ${id}`,
-      });
-    }
 
     // retrieve course with given id using course service
     const course = await courseService.getCourseById(id);
 
     // 404: not found
     if (!course) {
-      // course with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Course with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Course with id ${id} not found`, 404);
     }
 
     return res.status(200).json({
@@ -258,51 +235,50 @@ export const addCourse = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: `Course can't be added; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        "Course can't be added; no user is logged in",
+        401
+      );
     }
 
     // add logged in user's id to the body of the request
     req.body.user = req.user.id;
-    // see what's in the body of the request
+    // debugging: see what's in the body of the request
     console.log("addCourse: req.body = ", req.body);
 
     const { bootcampId } = req.params;
 
     if (bootcampId === undefined) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "bootcampId must be added as a query parameter: /api/v1/bootcamps/:bootcampId/courses",
-      });
+      throw new ErrorResponse(
+        "bootcampId must be included in the route parameters",
+        400
+      );
     }
 
-    // ensure that the bootcamp id is a non-empty string
+    // Ensure that the bootcamp id is a non-empty string
     if (!isNonEmptyString(bootcampId)) {
-      return res.status(400).json({
-        success: false,
-        error: "bootcampId must be a non-empty string",
-      });
+      throw new ErrorResponse("bootcampId must be a non-empty string", 400);
     }
 
-    //   400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid bootcamp id: ${bootcampId}`,
-      });
-    }
+    // 400: invalid ObjectId
+    // This is unnecessary now due to middleware called in
+    // the route that calls this function (bootcamps route file)
+    // if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     error: `Invalid bootcamp id: ${bootcampId}`,
+    //   });
+    // }
 
     // check to see if a bootcamp with _id = bootcampId actually exists
     const bootcamp = await bootcampService.getBootcampById(bootcampId);
 
+    // 404: bootcamp not found
     if (bootcamp === null) {
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id = ${bootcampId} not found`,
-      });
+      throw new ErrorResponse(
+        `Bootcamp with id = ${bootcampId} not found`,
+        404
+      );
     }
 
     // Only the owner of the bootcamp or an admin can add a course to a bootcamp
@@ -310,10 +286,10 @@ export const addCourse = asyncHandler(
       bootcamp.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res.status(400).json({
-        success: false,
-        error: `User with id ${req.user.id} is not authorized to add a course to bootcamp with id = ${bootcampId}`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} is not authorized to add a course to bootcamp with id = ${bootcampId}`,
+        403
+      );
     }
 
     // data transfer object (object that will contain the processed request)
@@ -343,10 +319,10 @@ export const updateCourse = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: `Course can't be updated; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        "Course can't be updated; no user is logged in",
+        401
+      );
     }
 
     // This line is actually unnecessary
@@ -356,24 +332,12 @@ export const updateCourse = asyncHandler(
     // see what's in the body of the request
     console.log("updateCourse: req.body = ", req.body);
 
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid course id: ${id}`,
-      });
-    }
-
     // check if course exists; retrieve user id
     let course = await courseService.getCourseById(id);
 
     // 404: not found
     if (!course) {
-      // course with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Course with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Course with id ${id} not found`, 404);
     }
 
     // Only the owner of the course or an admin can add modify a course
@@ -381,10 +345,10 @@ export const updateCourse = asyncHandler(
       course.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res.status(400).json({
-        success: false,
-        error: `User with id ${req.user.id} is not authorized to modify a course with id = ${id}`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} is not authorized to modify a course with id = ${id}`,
+        403
+      );
     }
 
     // data transfer object (object that will contain the processed request)
@@ -395,16 +359,6 @@ export const updateCourse = asyncHandler(
 
     // use service to update a course
     course = await courseService.updateCourseById(id, dto);
-
-    // Redundant
-    // 404: not found
-    if (!course) {
-      // bootcamp with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Course with id ${id} not found`,
-      });
-    }
 
     // send response to route
     res.status(200).json({
@@ -418,38 +372,31 @@ export const updateCourse = asyncHandler(
 export const deleteCourse = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     // obtain the course's id from the route parameter
+    // id is already validated via the middleware that
+    // gets called in the route before this function is called (courses route file)
     const { id } = req.params;
 
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid course id: ${id}`,
-      });
-    }
+    // debugging
+    // console.log("deleteCourse (before adding req.user): req.body = ", req.body);
 
-    console.log("deleteCourse (before adding req.user): req.body = ", req.body);
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: `Course with id = ${id} can't be deleted; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        `Course with id = ${id} can't be deleted; no user is logged in`,
+        401
+      );
     }
 
-    console.log("deleteCourse: req.user = ", req.user);
+    // debugging
+    // console.log("deleteCourse: req.user = ", req.user);
 
     // check if course exists; retrieve user id
     let courseToDelete = await courseService.getCourseById(id);
 
     // 404: not found
     if (!courseToDelete) {
-      // course with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Course with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Course with id ${id} not found`, 404);
     }
 
     // Only the owner of the course or an admin can delete a course
@@ -457,23 +404,14 @@ export const deleteCourse = asyncHandler(
       courseToDelete.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res.status(400).json({
-        success: false,
-        error: `User with id ${req.user.id} is not authorized to delete the course with id = ${id}`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} is not authorized to delete the course with id = ${id}`,
+        403
+      );
     }
 
     // use service to delete a course
     courseToDelete = await courseService.deleteCourseById(id);
-
-    // 404: not found
-    if (!courseToDelete) {
-      // course with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Course with id ${id} not found`,
-      });
-    }
 
     // send repsonse to route
     res.status(204).json({
