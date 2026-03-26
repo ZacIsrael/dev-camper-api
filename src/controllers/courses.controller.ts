@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from "express";
-import { UpdateCourseDTO } from "../dtos/course.dto.js";
 import { courseService } from "../services/course.service.js";
 
 // import mongoose from "mongoose";
@@ -337,14 +336,8 @@ export const updateCourse = asyncHandler(
       );
     }
 
-    // data transfer object (object that will contain the processed request)
-    let dto: UpdateCourseDTO;
-    // process and validate the body of the request (see course.dto.ts)
-    dto = new UpdateCourseDTO(req.body);
-    console.log("updateCourse: dto = ", dto);
-
     // use service to update a course
-    course = await courseService.updateCourseById(id, dto);
+    course = await courseService.updateCourseById(id, req.body);
 
     // send response to route
     res.status(200).json({
