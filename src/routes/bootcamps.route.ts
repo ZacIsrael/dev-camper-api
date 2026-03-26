@@ -26,6 +26,7 @@ import { addCourse, getCourses } from "../controllers/courses.controller.js";
 import { protect, authorize } from "../middleware/auth.middleware.js";
 import { addReview, getReviews } from "../controllers/reviews.controller.js";
 import { CreateCourseDTO } from "../dtos/course.dto.js";
+import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
 
 const router = express.Router();
 
@@ -66,6 +67,7 @@ router.post(
 router.post(
   "/:bootcampId/reviews",
   validateParams(BootcampIdParamDTO),
+  validateBody(CreateBootcampDTO),
   protect,
   addReview
 );
