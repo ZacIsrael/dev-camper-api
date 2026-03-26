@@ -1,11 +1,9 @@
 // This file is responsible for handling API requests that come in for bootcamps
 
 import type { Request, Response, NextFunction } from "express";
-import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
 // Used to safely inspect and normalize file extensions
 import path from "path";
 import { bootcampService } from "../services/bootcamp.service.js";
-import mongoose from "mongoose";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import { geocoder } from "../utils/geocoder.js";
 import { Bootcamp } from "../models/bootcamp.model.js";
@@ -295,15 +293,9 @@ export const addBootcamp = asyncHandler(
       );
     }
 
-    // data transfer object (object that will contained the processed request)
-    let dto: CreateBootcampDTO;
-
-    // process the body of the request (see bootcampo.dto.js)
-    dto = new CreateBootcampDTO(req.body);
-    console.log("addBootcamp: dto = ", dto);
 
     // use service to add bootcamp
-    const bootcamp = await bootcampService.createBootcamp(dto);
+    const bootcamp = await bootcampService.createBootcamp(req.body);
     // send response to route
     res
       .status(201)
