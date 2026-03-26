@@ -23,6 +23,7 @@ import path from "node:path";
 // Import helper to convert module URL to file path (ESM-compatible)
 import { fileURLToPath } from "node:url";
 import { sendEmail } from "../utils/sendEmail.js";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 // Convert the current module URL into an absolute file path
 const __filename = fileURLToPath(import.meta.url);
@@ -66,11 +67,9 @@ export const login = asyncHandler(
     const user = await userService.getUserByEmail(email, true);
 
     // invalid credentials (best practice not to reveal whether email exists)
+    // Could be a 401 or 404...for now, I'll leave it as 401
     if (user === null) {
-      return res.status(401).json({
-        success: false,
-        error: "Invalid credentials",
-      });
+      throw new ErrorResponse("Invalid credentials", 401);
     }
 
     // check to see if the password matches
@@ -79,10 +78,7 @@ export const login = asyncHandler(
     // password in the request does not match the password that is
     // stored with the user with the specified email
     if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: "Invalid credentials",
-      });
+      throw new ErrorResponse("Invalid credentials", 401);
     }
 
     // Ensure that the password is NOT returned to the client
@@ -138,20 +134,17 @@ export const updateDetails = asyncHandler(
     const dto = req.body;
 
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: "User fields can't be updated; No user is logged in",
-      });
+      throw new ErrorResponse(
+        "User fields can't be updated; No user is logged in",
+        401
+      );
     }
     // req.user is populated by the protect middleware (auth.middleware.ts) after JWT verification
     // const user = await userService.updateUserById(req.user.id, fieldsToUpdate);
 
     const user = await userService.updateUserById(req.user.id, dto);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: "User not found",
-      });
+      throw new ErrorResponse("User not found", 404);
     }
     res.status(200).json({
       success: true,
@@ -164,10 +157,10 @@ export const updateDetails = asyncHandler(
 export const updatePassword = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     if (!req.user.id) {
-      return res.status(401).json({
-        success: false,
-        error: "User fields can't be updated; No user is logged in",
-      });
+      throw new ErrorResponse(
+        "User fields can't be updated; No user is logged in",
+        401
+      );
     }
 
     // req.body has already been validated by validateBody(UpdatePasswordDTO) in auth.route.ts
@@ -177,20 +170,14 @@ export const updatePassword = asyncHandler(
     const user = await userService.getUserByIdWithPassword(req.user.id);
 
     if (user === null) {
-      return res.status(404).json({
-        success: false,
-        error: `User with id = ${req.user.id} not found`,
-      });
+      throw new ErrorResponse(`User with id = ${req.user.id} not found`, 404);
     }
 
     // check if the (hashed) current password from the request body matches the (hashed) password in the database
     // if they don't match, then the password will not be updated
 
     if (!(await user.matchPassword(currentPassword))) {
-      return res.status(401).json({
-        success: false,
-        error: "Password is incorrect",
-      });
+      throw new ErrorResponse("Password is incorrect", 401);
     }
 
     const updatedUser = await userService.updatePasswordById(
@@ -199,10 +186,7 @@ export const updatePassword = asyncHandler(
     );
 
     if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        error: "User not found",
-      });
+      throw new ErrorResponse("User not found", 404);
     }
 
     sendTokenResponse(updatedUser, 200, res);
@@ -218,10 +202,7 @@ export const forgotPassword = asyncHandler(
     const user = await userService.getUserByEmail(email, false);
 
     if (user === null) {
-      return res.status(404).json({
-        success: false,
-        error: `User with email = ${email} not found`,
-      });
+      throw new ErrorResponse(`User with email = ${email} not found`, 404);
     }
 
     // Generate reset token (plain token returned; hashed token + expiry set on user doc)
@@ -237,10 +218,7 @@ export const forgotPassword = asyncHandler(
     );
 
     if (!req.protocol) {
-      return res.status(400).json({
-        success: false,
-        error: `The request protocol does not exist`,
-      });
+      throw new ErrorResponse(`The request protocol does not exist`, 400);
     }
 
     const resetUrl = `${req.protocol}://${req.get(
@@ -268,10 +246,7 @@ export const forgotPassword = asyncHandler(
       // Clear reset fields via user service (avoids null + avoids undefined params)
       await userService.clearPasswordResetFields(user._id.toString());
 
-      return res.status(500).json({
-        success: false,
-        error: "Email could not be sent",
-      });
+      throw new ErrorResponse("Email could not be sent", 500);
     }
   }
 );
@@ -283,10 +258,10 @@ export const resetPassword = asyncHandler(
     const { resettoken } = req.params;
 
     if (!resettoken) {
-      return res.status(400).json({
-        success: false,
-        error: "Bad Request: resettoken is not in query parameters",
-      });
+      throw new ErrorResponse(
+        "Bad Request: resettoken is not in query parameters",
+        400
+      );
     }
 
     // Get the hashed token
@@ -299,18 +274,12 @@ export const resetPassword = asyncHandler(
     const user = await userService.getUserByValidResetToken(resetPasswordToken);
 
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid or expired token",
-      });
+      throw new ErrorResponse("Invalid or expired token", 400);
     }
 
     // check to see if a password was sent in the body of the request
     if (!req.body.password) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter a new password",
-      });
+      throw new ErrorResponse("Enter a new password", 400);
     }
 
     const newPassword = req.body.password;
@@ -322,10 +291,7 @@ export const resetPassword = asyncHandler(
     );
 
     if (!updatedUser) {
-      return res.status(404).json({
-        success: false,
-        error: "User not found",
-      });
+      throw new ErrorResponse("User not found", 404);
     }
     // Clear reset fields after successful password update (avoids null + avoids undefined params)
     await userService.clearPasswordResetFields(user._id.toString());
