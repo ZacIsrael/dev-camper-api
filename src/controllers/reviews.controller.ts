@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import { isNonEmptyString } from "../utils/helpers.js";
-import mongoose from "mongoose";
+
 import { reviewService } from "../services/review.service.js";
 import { bootcampService } from "../services/bootcamp.service.js";
 import { CreateReviewDTO, UpdateReviewDTO } from "../dtos/review.dto.js";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 // GET /api/v1/bootcamps/:bootcampId/reviews route
 // GET /api/v1/reviews route
@@ -153,18 +154,7 @@ export const getReviews = asyncHandler(
     if (bootcampId !== undefined) {
       // ensure that the bootcamp id is a non-empty string
       if (!isNonEmptyString(bootcampId)) {
-        return res.status(400).json({
-          success: false,
-          error: "bootcampId must be a non-empty string",
-        });
-      }
-
-      //   400: invalid ObjectId
-      if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
-        return res.status(400).json({
-          success: false,
-          error: `Invalid bootcamp id: ${bootcampId}`,
-        });
+        throw new ErrorResponse("bootcampId must be a non-empty string", 400);
       }
 
       // pass the id to the filter: { bootcamp: bootcampId}
@@ -208,22 +198,11 @@ export const getReviewById = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid review id: ${id}`,
-      });
-    }
-
     // retrieve the review
     const review = await reviewService.getReviewById(id);
 
     if (review === null) {
-      return res.status(404).json({
-        success: false,
-        error: `Review with id = ${id} not found`,
-      });
+      throw new ErrorResponse(`Review with id = ${id} not found`, 404);
     }
 
     // return review to the client
@@ -240,10 +219,10 @@ export const addReview = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user.id) {
-      return res.status(401).json({
-        success: false,
-        error: `Review can't be added; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        `Review can't be added; No user is logged in`,
+        401
+      );
     }
 
     // add logged in user's id to the body of the request
@@ -263,35 +242,24 @@ export const addReview = asyncHandler(
 
     // ensure that the bootcamp id is a non-empty string
     if (!isNonEmptyString(bootcampId)) {
-      return res.status(400).json({
-        success: false,
-        error: "bootcampId must be a non-empty string",
-      });
-    }
-
-    //   400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(bootcampId)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid bootcamp id: ${bootcampId}`,
-      });
+      throw new ErrorResponse("bootcampId must be a non-empty string", 400);
     }
 
     // check to see if a bootcamp with _id = bootcampId actually exists
     const bootcamp = await bootcampService.getBootcampById(bootcampId);
 
     if (bootcamp === null) {
-      return res.status(404).json({
-        success: false,
-        error: `Bootcamp with id = ${bootcampId} not found`,
-      });
+      throw new ErrorResponse(
+        `Bootcamp with id = ${bootcampId} not found`,
+        404
+      );
     }
 
     if (bootcamp.user.toString() === req.user.id) {
-      return res.status(403).json({
-        success: false,
-        error: `Bootcamp owner can't write a review for their own bootcamp.`,
-      });
+      throw new ErrorResponse(
+        `Bootcamp owner can't write a review for their own bootcamp.`,
+        403
+      );
     }
 
     // data transfer object (object that will contain the processed request)
@@ -318,10 +286,10 @@ export const updateReview = asyncHandler(
     // Might be unnecessary because of middleware that protects routes
     // but you can never be too careful
     if (!req.user.id) {
-      return res.status(401).json({
-        success: false,
-        error: `Review can't be updated; No user is logged in`,
-      });
+      throw new ErrorResponse(
+        `Review can't be updated; No user is logged in`,
+        401
+      );
     }
 
     // This line is unnecessary
@@ -333,24 +301,13 @@ export const updateReview = asyncHandler(
     // review id
     const { id } = req.params;
 
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid review id: ${id}`,
-      });
-    }
-
     // check if review exists
     let review = await reviewService.getReviewById(id);
 
     // 404: not found
     if (!review) {
       // review with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Review with id ${id} not found`,
-      });
+      throw new ErrorResponse(`Review with id ${id} not found`, 404);
     }
 
     // Only the user that wrote the review or an admin can add/modify a review
@@ -358,10 +315,10 @@ export const updateReview = asyncHandler(
       review.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res.status(400).json({
-        success: false,
-        error: `User with id ${req.user.id} is not authorized to modify the review with id = ${id}`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} is not authorized to modify the review with id = ${id}`,
+        403
+      );
     }
 
     // sanitize the body of the update request
@@ -370,16 +327,6 @@ export const updateReview = asyncHandler(
 
     // use service to update the review
     review = await reviewService.updateReviewById(id, dto);
-
-    // Redundant
-    // 404: not found
-    if (!review) {
-      // review with given id does not exist
-      return res.status(404).json({
-        success: false,
-        error: `Review with id ${id} not found`,
-      });
-    }
 
     // send response to route
     res.status(200).json({
@@ -398,38 +345,20 @@ export const deleteReview = asyncHandler(
     // Safe guard incase of accidental deletion of user when testing;
     // This will almost never happen in production
     if (!req.user.id) {
-      return res.status(401).json({
-        success: false,
-        // No user appears to be logged in
-        error: "Authentication required",
-      });
+      throw new ErrorResponse("Authentication required", 401);
     }
     console.log("req.user = ", req.user);
     if (!req.params.id) {
-      return res.status(400).json({
-        success: false,
-        error: "Add review id to query parameters",
-      });
+      throw new ErrorResponse("Add review id to query parameters", 400);
     }
 
     const { id } = req.params;
-
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid review id: ${id}`,
-      });
-    }
 
     // check to see if the review actually exists
     reviewToBeDeleted = await reviewService.getReviewById(id);
 
     if (reviewToBeDeleted === null) {
-      return res.status(404).json({
-        success: false,
-        error: `Review with id = ${id} not found`,
-      });
+      throw new ErrorResponse(`Review with id = ${id} not found`, 404);
     }
 
     // Only the user that wrote the review or an admin can delete a review
@@ -437,10 +366,10 @@ export const deleteReview = asyncHandler(
       reviewToBeDeleted.user.toString() !== req.user.id.toString() &&
       req.user.role !== "admin"
     ) {
-      return res.status(400).json({
-        success: false,
-        error: `User with id ${req.user.id} is not authorized to delete the review with id = ${id}`,
-      });
+      throw new ErrorResponse(
+        `User with id ${req.user.id} is not authorized to delete the review with id = ${id}`,
+        400
+      );
     }
 
     // delete the review
