@@ -1,25 +1,8 @@
 // This file validates and sanitizes incoming API request data
-// before it is used to create a Course document
-
-/*
-
-Example Course structure:
-
-   {
-		"_id": "5d725a4a7b292f5f8ceff789",
-		"title": "Front End Web Development",
-		"description": "This course will provide you with all of the essentials to become a successful frontend web developer. You will learn to master HTML, CSS and front end JavaScript, along with tools like Git, VSCode and front end frameworks like Vue",
-		"weeks": 8,
-		"tuition": 8000,
-		"minimumSkill": "beginner",
-		"scholarhipsAvailable": true,
-		"bootcamp": "5d713995b721c3bb38c1f5d0",
-		"user": "5d7a514b5d2c12c7449be045"
-    }
-        
-  */
+// before it is used to create or update a Course document
 
 import {
+  assertIsObject,
   isBoolean,
   isNonEmptyString,
   isNumber,
@@ -27,105 +10,90 @@ import {
 } from "../utils/helpers.js";
 import mongoose from "mongoose";
 
+const ALLOWED_MINIMUM_SKILLS = [
+  "beginner",
+  "intermediate",
+  "advanced",
+] as const;
+
+type MinimumSkill = (typeof ALLOWED_MINIMUM_SKILLS)[number];
+
 // DTO representing the expected request body for creating a Course
 // Enforces the same constraints defined in the mongoose schema
 export class CreateCourseDTO {
   title: string;
-  // user that uploaded the bootcamp
-  user: mongoose.Types.ObjectId;
-
   description: string;
   weeks: number;
   tuition: number;
-  minimumSkill: string;
+  minimumSkill: MinimumSkill;
   scholarhipsAvailable: boolean;
-  // bootcamp will be passed in via the request's parameters
-  // controller will handle its validation
-  // bootcamp: string;
-  // will come back to this once user schema has been implemented
-  //   user: mongoose.Schema.ObjectId;
+  user: mongoose.Types.ObjectId;
 
-  // Constructor receives raw request body data
-  // Uses Partial to allow missing optional fields
-  constructor(data: Partial<CreateCourseDTO>) {
-    if (!isNonEmptyString(data.title)) {
+  constructor(data: unknown) {
+    const payload = assertIsObject(data, "Request body must be a valid object");
+
+    if (!isNonEmptyString(payload.title)) {
       throw new Error("Please add a title");
     }
 
-    // Trim whitespace to prevent storing accidental leading/trailing spaces
-    // const title = data.title.trim();
-    // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
-    const title = sanitizePlainText(data.title);
-    this.title = title;
+    // Sanitize user-provided title input to strip malicious HTML/JS
+    this.title = sanitizePlainText(payload.title);
 
-    if (!isNonEmptyString(data.user)) {
-      throw new Error("Please add a user id");
-    }
-
-    // Check that the data.user is in the proper format of a Mongoose id
-    if (!mongoose.Types.ObjectId.isValid(data.user)) {
-      throw new Error("Please add a valid user id");
-    }
-
-    // Assign validated user to DTO
-    this.user = data.user;
-
-    if (!isNonEmptyString(data.description)) {
+    if (!isNonEmptyString(payload.description)) {
       throw new Error("Please add a description");
     }
 
-    // Trim whitespace to prevent storing accidental leading/trailing spaces
-    // const description = data.description.trim();
-    // Sanitize user-provided description input to strip malicious HTML/JS (XSS prevention)
-    const description = sanitizePlainText(data.description);
-    this.description = description;
+    // Sanitize user-provided description input to strip malicious HTML/JS
+    this.description = sanitizePlainText(payload.description);
 
-    if (!isNonEmptyString(data.minimumSkill)) {
+    if (!isNonEmptyString(payload.minimumSkill)) {
       throw new Error("Please add a valid minimum skill level");
     }
 
-    // Ensure minimumSkill matches one of the allowed enum values
     if (
-      data.minimumSkill !== "beginner" &&
-      data.minimumSkill !== "intermediate" &&
-      data.minimumSkill !== "advanced"
+      !ALLOWED_MINIMUM_SKILLS.includes(payload.minimumSkill as MinimumSkill)
     ) {
       throw new Error(
         "Please add a valid minimum skill level: beginner, intermediate, or advanced"
       );
     }
 
-    this.minimumSkill = data.minimumSkill;
+    this.minimumSkill = payload.minimumSkill as MinimumSkill;
 
-    if (!isNumber(data.weeks)) {
+    if (!isNumber(payload.weeks)) {
       throw new Error(
         "Please add a number for duration in weeks of this course"
       );
     }
-    this.weeks = data.weeks;
 
-    if (!isNumber(data.tuition)) {
+    this.weeks = payload.weeks;
+
+    if (!isNumber(payload.tuition)) {
       throw new Error("Please add a cost for the tuition of this course");
     }
-    this.tuition = data.tuition;
 
-    if (data.scholarhipsAvailable !== undefined) {
-      if (!isBoolean(data.scholarhipsAvailable)) {
+    this.tuition = payload.tuition;
+
+    if (payload.scholarhipsAvailable !== undefined) {
+      if (!isBoolean(payload.scholarhipsAvailable)) {
         throw new Error("scholarhipsAvailable must be a boolean");
       }
-      this.scholarhipsAvailable = data.scholarhipsAvailable;
+
+      this.scholarhipsAvailable = payload.scholarhipsAvailable;
     } else {
-      // Default to false if scholarshipsAvailable is not provided
+      // Default to false if scholarhipsAvailable is not provided
       this.scholarhipsAvailable = false;
     }
 
-    // if (!isNonEmptyString(data.bootcamp)) {
-    //   throw new Error("Please enter an id for a bootcamp");
-    // }
+    if (!isNonEmptyString(payload.user)) {
+      throw new Error("Please add a user id");
+    }
 
-    // // Trim whitespace to prevent storing accidental leading/trailing spaces
-    // const bootcampId = data.bootcamp.trim();
-    // this.bootcamp = bootcampId;
+    if (!mongoose.Types.ObjectId.isValid(payload.user)) {
+      throw new Error("Please add a valid user id");
+    }
+
+    this.user = new mongoose.Types.ObjectId(payload.user);
   }
 }
 
@@ -136,88 +104,81 @@ export class UpdateCourseDTO {
   description?: string;
   weeks?: number;
   tuition?: number;
-  minimumSkill?: string;
+  minimumSkill?: MinimumSkill;
   scholarhipsAvailable?: boolean;
 
-  constructor(data: Partial<UpdateCourseDTO>) {
+  constructor(data: unknown) {
+    const payload = assertIsObject(data, "Request body must be a valid object");
+
     if (
-      data.title === undefined &&
-      data.description === undefined &&
-      data.weeks === undefined &&
-      data.tuition === undefined &&
-      data.minimumSkill === undefined &&
-      data.scholarhipsAvailable === undefined
+      payload.title === undefined &&
+      payload.description === undefined &&
+      payload.weeks === undefined &&
+      payload.tuition === undefined &&
+      payload.minimumSkill === undefined &&
+      payload.scholarhipsAvailable === undefined
     ) {
       throw new Error(
         "At least one of the following fields must be updated: title, description, weeks, tuition, minimumSkill, scholarhipsAvailable"
       );
     }
 
-    if (data.title !== undefined) {
-      if (!isNonEmptyString(data.title)) {
+    if (payload.title !== undefined) {
+      if (!isNonEmptyString(payload.title)) {
         throw new Error("Please add a title");
       }
 
-      // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
-      const title = sanitizePlainText(data.title);
-
-      this.title = title;
+      this.title = sanitizePlainText(payload.title);
     }
 
-    if (data.description !== undefined) {
-      if (!isNonEmptyString(data.description)) {
+    if (payload.description !== undefined) {
+      if (!isNonEmptyString(payload.description)) {
         throw new Error("Please add a description");
       }
 
-      // Sanitize user-provided description input to strip malicious HTML/JS (XSS prevention)
-      const description = sanitizePlainText(data.description);
-
-      this.description = description;
+      this.description = sanitizePlainText(payload.description);
     }
 
-    if (data.minimumSkill !== undefined) {
-      if (!isNonEmptyString(data.minimumSkill)) {
+    if (payload.minimumSkill !== undefined) {
+      if (!isNonEmptyString(payload.minimumSkill)) {
         throw new Error("Please add a valid minimum skill level");
       }
 
-      // Ensure minimumSkill matches one of the allowed enum values
       if (
-        data.minimumSkill !== "beginner" &&
-        data.minimumSkill !== "intermediate" &&
-        data.minimumSkill !== "advanced"
+        !ALLOWED_MINIMUM_SKILLS.includes(payload.minimumSkill as MinimumSkill)
       ) {
         throw new Error(
           "Please add a valid minimum skill level: beginner, intermediate, or advanced"
         );
       }
 
-      this.minimumSkill = data.minimumSkill;
+      this.minimumSkill = payload.minimumSkill as MinimumSkill;
     }
 
-    if (data.weeks !== undefined) {
-      if (!isNumber(data.weeks)) {
+    if (payload.weeks !== undefined) {
+      if (!isNumber(payload.weeks)) {
         throw new Error(
           "Please add a number for duration in weeks of this course"
         );
       }
 
-      this.weeks = data.weeks;
+      this.weeks = payload.weeks;
     }
 
-    if (data.tuition !== undefined) {
-      if (!isNumber(data.tuition)) {
+    if (payload.tuition !== undefined) {
+      if (!isNumber(payload.tuition)) {
         throw new Error("Please add a cost for the tuition of this course");
       }
 
-      this.tuition = data.tuition;
+      this.tuition = payload.tuition;
     }
 
-    if (data.scholarhipsAvailable !== undefined) {
-      if (!isBoolean(data.scholarhipsAvailable)) {
+    if (payload.scholarhipsAvailable !== undefined) {
+      if (!isBoolean(payload.scholarhipsAvailable)) {
         throw new Error("scholarhipsAvailable must be a boolean");
       }
 
-      this.scholarhipsAvailable = data.scholarhipsAvailable;
+      this.scholarhipsAvailable = payload.scholarhipsAvailable;
     }
   }
 }
