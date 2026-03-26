@@ -31,7 +31,7 @@ router.get("/:id", validateParams(IdParamDTO), getCourseById);
 router.patch(
   "/:id",
   validateParams(IdParamDTO),
-  // validateBody(UpdateCourseDTO),
+  validateBody(UpdateCourseDTO),
   protect,
   authorize("publisher", "admin"),
   updateCourse
