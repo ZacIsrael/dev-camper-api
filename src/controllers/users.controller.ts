@@ -2,18 +2,14 @@ import type { Request, Response, NextFunction } from "express";
 import { asyncHandler } from "../middleware/async.middleware.js";
 import { userService } from "../services/user.service.js";
 import { CreateUserDTO, UpdateUserDTO } from "../dtos/user.dto.js";
-import mongoose from "mongoose";
+import { ErrorResponse } from "../utils/errorResponse.js";
 
 export const getAllUsers = asyncHandler(
   async (req: any, res: Response, next: NextFunction) => {
     // Safe guard incase of accidental deletion of admin user when testing;
     // This will almost never happen in production
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        // No user appears to be logged in
-        error: "Authentication required",
-      });
+      throw new ErrorResponse("Authentication required", 401);
     }
     console.log("req.user = ", req.user);
     // message returned when not bootcamps are found
@@ -24,10 +20,7 @@ export const getAllUsers = asyncHandler(
 
     const results = await userService.getAllUsers(null, null, null);
     if (results === null) {
-      return res.status(500).json({
-        success: false,
-        error: "Error retrieving users",
-      });
+      throw new ErrorResponse("Error retrieving users", 500);
     }
 
     // length of array of users
@@ -48,37 +41,22 @@ export const getUserById = asyncHandler(
     // Safe guard incase of accidental deletion of admin user when testing;
     // This will almost never happen in production
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        // No user appears to be logged in
-        error: "Authentication required",
-      });
+      throw new ErrorResponse("Authentication required", 401);
     }
-    console.log("req.user = ", req.user);
+    // debugging
+    // console.log("req.user = ", req.user);
     if (!req.params.id) {
-      return res.status(400).json({
-        success: false,
-        error: "Add user id to query parameters",
-      });
+      throw new ErrorResponse("Add user id to query parameters", 400);
     }
 
+    // middleware called in users route file validates the id
     const { id } = req.params;
 
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid user id: ${id}`,
-      });
-    }
     // retrieve the user
     const user = await userService.getUserById(id);
 
     if (user === null) {
-      return res.status(404).json({
-        success: false,
-        error: `User with id = ${id} not found`,
-      });
+      throw new ErrorResponse(`User with id = ${id} not found`, 404);
     }
 
     res.status(200).json({
@@ -94,18 +72,11 @@ export const createUser = asyncHandler(
     // Safe guard incase of accidental deletion of admin user when testing;
     // This will almost never happen in production
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        // No user appears to be logged in
-        error: "Authentication required",
-      });
+      throw new ErrorResponse("Authentication required", 401);
     }
     console.log("req.user = ", req.user);
     if (!req.body) {
-      return res.status(400).json({
-        success: false,
-        error: "Add body to this request",
-      });
+      throw new ErrorResponse("Add body to this request", 400);
     }
     // see what's in the body of the request
     console.log("register: req.body = ", req.body);
@@ -136,34 +107,18 @@ export const updateUser = asyncHandler(
     // Safe guard incase of accidental deletion of admin user when testing;
     // This will almost never happen in production
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        // No user appears to be logged in
-        error: "Authentication required",
-      });
+      throw new ErrorResponse("Authentication required", 401);
     }
     console.log("req.user = ", req.user);
     if (!req.params.id) {
-      return res.status(400).json({
-        success: false,
-        error: "Add user id to query parameters",
-      });
+      throw new ErrorResponse("Add user id to query parameters", 400);
     }
 
+    // middleware called in users route file validates the id
     const { id } = req.params;
 
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid user id: ${id}`,
-      });
-    }
     if (!req.body) {
-      return res.status(400).json({
-        success: false,
-        error: "Add body to this request",
-      });
+      throw new ErrorResponse("Add body to this request", 400);
     }
     // see what's in the body of the request
     console.log("register: req.body = ", req.body);
@@ -179,10 +134,10 @@ export const updateUser = asyncHandler(
     const user = await userService.adminUpdateUserById(id, dto);
 
     if (user === null) {
-      return res.status(404).json({
-        success: false,
-        error: `Update failed: user with id = ${id} not found`,
-      });
+      throw new ErrorResponse(
+        `Update failed: user with id = ${id} not found`,
+        404
+      );
     }
 
     // send response
@@ -200,39 +155,19 @@ export const deleteUser = asyncHandler(
     // Safe guard incase of accidental deletion of admin user when testing;
     // This will almost never happen in production
     if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        // No user appears to be logged in
-        error: "Authentication required",
-      });
+      // No user appears to be logged in
+      throw new ErrorResponse("Authentication required", 401);
     }
     console.log("req.user = ", req.user);
     if (!req.params.id) {
-      return res.status(400).json({
-        success: false,
-        error: "Add user id to query parameters",
-      });
+      throw new ErrorResponse("Add user id to query parameters", 400);
     }
 
+    // middleware called in users route file validates the id
     const { id } = req.params;
-
-    // 400: invalid ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid user id: ${id}`,
-      });
-    }
 
     // delete the user
     const userToBeDeleted = await userService.deleteUserById(id);
-
-    // if (userToBeDeleted === null) {
-    //   return res.status(404).json({
-    //     success: false,
-    //     error: `Update failed: user with id = ${id} not found`,
-    //   });
-    // }
 
     // send response
     return res.status(204).json({
