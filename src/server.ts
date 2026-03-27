@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url";
 // import morgan middleware logger
 import morgan from "morgan";
 
-// import custom middleware to prevent against csrf
+// import custom middleware to prevent csrf
 import { csrfProtection } from "./middleware/csrf.middleware.js";
 
 // custom error handler middleware
@@ -206,6 +206,8 @@ app.use(
   })
 );
 
+// Apply CSRF protection middleware globally to block unauthorized state-changing requests
+// Enforces same-site/origin checks and requires a custom CSRF header for added security
 app.use(csrfProtection);
 
 // Configure Express to serve static files (such as uploaded photos)
