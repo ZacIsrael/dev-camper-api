@@ -27,6 +27,7 @@ import { protect, authorize } from "../middleware/auth.middleware.js";
 import { addReview, getReviews } from "../controllers/reviews.controller.js";
 import { CreateCourseDTO } from "../dtos/course.dto.js";
 import { CreateBootcampDTO } from "../dtos/bootcamp.dto.js";
+import { CreateReviewDTO } from "../dtos/review.dto.js";
 
 const router = express.Router();
 
@@ -67,12 +68,18 @@ router.post(
 router.post(
   "/:bootcampId/reviews",
   validateParams(BootcampIdParamDTO),
-  validateBody(CreateBootcampDTO),
+  // validateBody(CreateReviewDTO),
   protect,
   addReview
 );
 // Add a bootcamp
-router.post("/", protect, authorize("publisher", "admin"), addBootcamp);
+router.post(
+  "/",
+  validateBody(CreateBootcampDTO),
+  protect,
+  authorize("publisher", "admin"),
+  addBootcamp
+);
 
 // Replace a bootcamp
 router.put(
