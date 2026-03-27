@@ -17,6 +17,7 @@
 */
 
 import {
+  assertIsObject,
   isBoolean,
   isNonEmptyString,
   isNumber,
@@ -30,74 +31,37 @@ export class CreateReviewDTO {
   title: string;
   text: string;
   rating: number;
-  // user that uploaded the review
-  user: mongoose.Types.ObjectId;
-  // bootcamp will be passed in via the request's parameters
-  // controller will handle its validation
-  // bootcamp that this review belongs
-  // bootcamp: mongoose.Types.ObjectId;
 
-  constructor(data: Partial<CreateReviewDTO>) {
-    if (!isNonEmptyString(data.title)) {
+  constructor(data: unknown) {
+    const payload = assertIsObject(data, "Request body must be a valid object");
+    if (!isNonEmptyString(payload.title)) {
       throw new Error("Please add a title");
     }
 
-    // Trim whitespace to prevent storing accidental leading/trailing spaces
-    // const title = data.title.trim();
-
     // Sanitize user-provided title input to strip malicious HTML/JS (XSS prevention)
-    const title = sanitizePlainText(data.title);
+    const title = sanitizePlainText(payload.title);
 
     if (title.length > 100) {
       throw new Error("Title must be 100 characters or less.");
     }
     this.title = title;
 
-    if (!isNonEmptyString(data.text)) {
+    if (!isNonEmptyString(payload.text)) {
       throw new Error("Please add a review");
     }
 
-    // Trim whitespace to prevent storing accidental leading/trailing spaces
-    // const text = data.text.trim();
-
     // Sanitize user-provided text input to strip malicious HTML/JS (XSS prevention)
-    const text = sanitizePlainText(data.text);
+    const text = sanitizePlainText(payload.text);
     this.text = text;
 
-    if (!isNumber(data.rating)) {
+    if (!isNumber(payload.rating)) {
       throw new Error("Please give this bootcamp a valid rating (1-10)");
     }
 
-    if (data.rating > 10 || data.rating < 1) {
+    if (payload.rating > 10 || payload.rating < 1) {
       throw new Error("Please give this bootcamp a valid rating (1-10)");
     }
-    this.rating = data.rating;
-
-    if (!isNonEmptyString(data.user)) {
-      throw new Error("Please add a user id");
-    }
-
-    // Check that the data.user is in the proper format of a Mongoose id
-    if (!mongoose.Types.ObjectId.isValid(data.user)) {
-      throw new Error("Please add a valid user id");
-    }
-
-    // Assign validated user to DTO
-    this.user = data.user;
-
-    // bootcamp will be passed in via the request's parameters
-    // controller will handle its validation
-    // if (!isNonEmptyString(data.bootcamp)) {
-    //   throw new Error("Please add a bootcamp id");
-    // }
-
-    // // Check that the data.bootcamp is in the proper format of a Mongoose id
-    // if (!mongoose.Types.ObjectId.isValid(data.user)) {
-    //   throw new Error("Please add a valid bootcamp id");
-    // }
-
-    // // Assign validated bootcamp to DTO
-    // this.bootcamp = data.bootcamp;
+    this.rating = payload.rating;
   }
 }
 
