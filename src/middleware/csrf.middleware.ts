@@ -48,6 +48,7 @@ export const csrfProtection = (
   }
 
   // Require a custom header to ensure request is intentionally made by frontend
+  // All frontend requests MUST include the "x-csrf-token" header or they will be rejected
   const csrfHeader = req.header("x-csrf-token");
 
   // Reject request if custom CSRF header is missing
