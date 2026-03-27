@@ -248,6 +248,9 @@ export const addReview = asyncHandler(
     // check to see if a bootcamp with _id = bootcampId actually exists
     const bootcamp = await bootcampService.getBootcampById(bootcampId);
 
+    // bootcampId is a mandatory field in a review
+    req.body.bootcamp = bootcampId;
+
     if (bootcamp === null) {
       throw new ErrorResponse(
         `Bootcamp with id = ${bootcampId} not found`,
@@ -262,17 +265,8 @@ export const addReview = asyncHandler(
       );
     }
 
-    // data transfer object (object that will contain the processed request)
-    let dto: any;
-
-    // process the body of the request (see review.dto.js)
-    dto = new CreateReviewDTO(req.body);
-    // bootcampId is retrieved from the request parameters; not the body of the request
-    dto.bootcamp = bootcampId;
-    console.log("addReview: dto = ", dto);
-
     // use service to add review
-    const review = await reviewService.createReview(dto);
+    const review = await reviewService.createReview(req.body);
     // send response to route
     res
       .status(201)
