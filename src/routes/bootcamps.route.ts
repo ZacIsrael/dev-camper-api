@@ -68,7 +68,7 @@ router.post(
 router.post(
   "/:bootcampId/reviews",
   validateParams(BootcampIdParamDTO),
-  // validateBody(CreateReviewDTO),
+  validateBody(CreateReviewDTO),
   protect,
   addReview
 );
