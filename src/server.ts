@@ -80,48 +80,49 @@ if (process.env.NODE_ENV === "development") {
 
 // Set secure HTTP headers
 // app.use(helmet());
-// Apply Helmet middleware with custom security configuration (adds secure HTTP headers)
+// Apply Helmet middleware with a custom security configuration (sets secure HTTP response headers)
 app.use(
   helmet({
-    // Configure Content Security Policy (CSP) to restrict what resources the browser can load
+    // Configure Content Security Policy (CSP) to strictly control which resources the browser is allowed to load
     contentSecurityPolicy: {
       directives: {
-        // Default rule: only allow resources from this server (same origin)
+        // Default rule: only allow resources from the same origin (this server)
         defaultSrc: ["'self'"],
 
-        // Only allow JavaScript to be executed if it comes from this server
+        // Only allow JavaScript execution from trusted sources (same origin)
         scriptSrc: ["'self'"],
 
-        // Allow styles from this server and inline styles (needed for some setups, but less secure)
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        // Allow styles from same origin;
+        styleSrc: ["'self'"],
 
-        // Allow images from this server and base64-encoded images (data URLs)
+        // Allow images from same origin and data URIs (base64-encoded images)
         imgSrc: ["'self'", "data:"],
 
-        // Allow fonts from this server and embedded (base64) fonts
+        // Allow fonts from same origin and embedded (base64) sources
         fontSrc: ["'self'", "data:"],
 
-        // Restrict API/fetch/AJAX/WebSocket requests to this server only
+        // Restrict API, fetch, AJAX, and WebSocket connections to same origin only
         connectSrc: ["'self'"],
 
-        // Block all plugins like Flash, Java applets (prevents legacy injection attacks)
+        // Disallow all plugins (e.g., Flash, Java) to prevent legacy injection vectors
         objectSrc: ["'none'"],
 
-        // Prevent this app from being embedded in iframes (protects against clickjacking)
+        // Prevent this application from being embedded in iframes (mitigates clickjacking attacks)
         frameAncestors: ["'none'"],
 
-        // Restrict the base URL for relative links to this origin only
+        // Restrict the base URI to the same origin (prevents base tag manipulation attacks)
         baseUri: ["'self'"],
 
-        // Only allow form submissions to this server
+        // Only allow form submissions to this origin
         formAction: ["'self'"],
 
-        // Automatically upgrade HTTP requests to HTTPS (if applicable)
+        // Instruct browsers to upgrade HTTP requests to HTTPS automatically (when supported)
         upgradeInsecureRequests: [],
       },
     },
 
-    // Disable strict cross-origin isolation (avoids issues in development environments)
+    // Disable cross-origin isolation for compatibility (not required for this backend API)
+    // Cross-origin isolation restricts how a document interacts with cross-origin resources at the browser level
     crossOriginEmbedderPolicy: false,
   })
 );
