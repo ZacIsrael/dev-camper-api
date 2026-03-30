@@ -7,9 +7,7 @@ import {
   isNonEmptyString,
   sanitizePlainText,
 } from "../utils/helpers.js";
-
-// Regex used to validate email format (matches mongoose schema)
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmail } from "../utils/validation.js";
 
 // Regex used to validate website URLs (matches mongoose schema)
 const WEBSITE_REGEX =
@@ -183,8 +181,8 @@ export class CreateBootcampDTO {
       // Trim email
       const email = payload.email.trim();
 
-      // Enforce email regex from schema
-      if (!EMAIL_REGEX.test(email)) {
+      // Ensure that the email is valid
+      if (!isValidEmail(email)) {
         throw new Error("Please add a valid email");
       }
 
