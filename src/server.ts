@@ -66,10 +66,13 @@ const app: Application = express();
 
 // Limit each IP to 100 requests per 15 minutes
 const limiter = rateLimit({
+  // Time window for rate limiting: 15 minutes (in milliseconds)
   windowMs: 15 * 60 * 1000,
+  // Maximum of 100 requests
   max: 100,
   // return rate limit info in headers
   standardHeaders: true,
+  // Disable deprecated X-RateLimit-* headers; use modern standardized RateLimit headers instead
   legacyHeaders: false,
 });
 
