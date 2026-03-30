@@ -116,12 +116,12 @@ const runValidation = <T>(
  *
  * Flow:
  * 1. Takes incoming raw request body
- * 2. Passes it through validation (DTO or function)
+ * 2. Passes it through validation (DTO or function; in most cases, DTO)
  * 3. If valid → replaces req.body with sanitized version
  * 4. If invalid → sends 400 response and stops execution
  *
  * Why replace req.body?
- * → Ensures downstream code ONLY sees validated data
+ * → Ensures code executed subsequently ONLY sees validated data
  */
 export const validateBody =
   <T>(validator: DTOConstructor<T> | ValidatorFunction<T>) =>
