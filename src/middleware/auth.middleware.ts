@@ -77,7 +77,7 @@ export const protect = asyncHandler(
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Debug log to inspect decoded payload during development
-      console.log("auth.middleware: decoded = ", decoded);
+      // console.log("auth.middleware: decoded = ", decoded);
 
       // Ensure payload has an id field before querying DB
       if (typeof decoded === "object" && "id" in decoded) {
