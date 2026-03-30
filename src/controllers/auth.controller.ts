@@ -2,16 +2,12 @@
 
 import type { Request, Response, NextFunction } from "express";
 
-import bcrypt from "bcryptjs";
-
 import crypto from "crypto";
 
 import { asyncHandler } from "../middleware/async.middleware.js";
 
 import { userService } from "../services/user.service.js";
 
-import { isNonEmptyString } from "../utils/helpers.js";
-import type { UserType } from "../types/user.interface.js";
 import type { UserDocument } from "../models/user.model.js";
 
 // Import dotenv to load environment variables from a file
